@@ -526,6 +526,40 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
+<!-- ══ FORM DESIGN ══ -->
+<div id="page-formDesign" class="page">
+  <div class="page-header">
+    <div class="page-title">🛠 إدارة فورمات الطلبات</div>
+    <div class="page-sub">تحكم في حقول كل فورم يملؤه المعلم عند تقديم طلب</div>
+  </div>
+
+  <!-- Form type tabs -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="btn btn-orange btn-sm" onclick="selectFormType('new_activity',this)">✨ إضافة نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('edit',this)">✏️ تعديل نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('disable',this)">⏸️ تعطيل نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('leave',this)">🌴 إجازة</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('deactivate',this)">🔒 تعطيل حساب</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <!-- Fields list -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title" id="formDesignTitle">حقول فورم: إضافة نشاط</div>
+        <button class="btn btn-orange btn-sm" onclick="addFormField()">+ إضافة حقل</button>
+      </div>
+      <div class="card-body" id="formFieldsList"></div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">معاينة الفورم</div></div>
+      <div class="card-body" id="formPreview"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ EVAL QUEUE ══ -->
 <div id="page-evalQueue" class="page">
   <div class="page-header"><div class="page-title">🔍 قائمة التقييم</div><div class="page-sub">SLA: التقييم خلال 3 أيام عمل من استلام الفيديو</div></div>
@@ -865,11 +899,7 @@ let policies = [
   {id:'p4',title:'سياسة التحويلات المالية',body:'تُحوَّل المستحقات المالية في بداية كل شهر.\nالحد الأدنى للتحويل: 50 ريال/دولار.'},
 ];
 
-let requests = [
-  {id:'rq1',teacher:'أ. محمد علي',teacherId:'t2',type:'edit',detail:'تعديل نشاط رياضيات — تغيير السعر إلى 60 ريال',date:'2026-05-15T10:00',status:'pending'},
-  {id:'rq2',teacher:'أ. نور الهدى',teacherId:'t3',type:'leave',detail:'إجازة من 20 مايو حتى 1 يونيو\nالسبب: سفر عائلي',date:'2026-05-14T09:00',status:'pending'},
-  {id:'rq3',teacher:'أ. ريم المنصور',teacherId:'t5',type:'new_activity',detail:'نشاط جديد: كيمياء عضوية\nالمستوى: ثانوي | السعر: 60 ريال/ساعة',date:'2026-05-13T11:00',status:'done'},
-];
+let requests = [];
 
 const REQ_TYPES = {edit:{l:'تعديل نشاط',i:'✏️'},disable:{l:'تعطيل نشاط',i:'⏸️'},leave:{l:'إجازة',i:'🌴'},deactivate:{l:'تعطيل حساب',i:'🔒'},new_activity:{l:'نشاط جديد',i:'✨'}};
 // ═══════════════════════════════════════════
@@ -1132,8 +1162,8 @@ function switchRole(role) {
 // UTILS
 // ═══════════════════════════════════════════
 function daysSince(dt){ return Math.floor((Date.now()-new Date(dt))/(864e5)); }
-function fmtDt(dt){ return new Date(dt).toLocaleString('ar-EG',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-function fmtDate(dt){ return new Date(dt).toLocaleDateString('ar-EG',{day:'numeric',month:'short'}); }
+function fmtDt(dt){ if(!dt)return '—'; const _d2=new Date(dt); if(isNaN(_d2.getTime()))return '—'; return _d2.toLocaleString('ar-EG',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(dt){ if(!dt)return '—'; const _d=new Date(dt); if(isNaN(_d.getTime()))return '—'; return _d.toLocaleDateString('ar-EG',{day:'numeric',month:'short'}); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function copyText(t){ navigator.clipboard?.writeText(t); toast('تم النسخ ✓'); }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
@@ -1148,7 +1178,7 @@ function renderKanban() {
   const container = document.getElementById('kanban');
   container.innerHTML = '';
   let total=0,prog=0,evalW=0,done=0,rej=0;
-  const cols = Array.from({length:8},()=>[]); const rejCol=[];
+  const cols = Array.from({length:12},()=>[]); const rejCol=[];
   teachers.forEach(t=>{
     total++;
     if(t.stage===7) done++;
@@ -1187,7 +1217,7 @@ function renderKanban() {
     list.forEach(t=>{
       const dStage=daysSince(t.stageAt); const dTotal=daysSince(t.addedAt);
       const slaWarn=(si===2||si===4)&&dStage>=3?`<div class="sla-warn">⚠️ تجاوز SLA (${dStage} أيام)</div>`:'';
-      const timeInfo=si===7?`مكتمل ${fmtDate(t.stageAt)} | ${dTotal} يوم إجمالي`
+      const timeInfo=si===11?`نشط منذ ${fmtDate(t.stageAt)} | ${dTotal} يوم إجمالي`
         :`في المرحلة: ${dStage===0?'اليوم':dStage+' يوم'} | الإجمالي: ${dTotal} يوم`;
       const card=document.createElement('div'); card.className='tcard';
       card.draggable=true;
@@ -1215,6 +1245,47 @@ function advance(id) {
   const t=teachers.find(x=>String(x.id)===String(id));
   if(t&&t.stage<11){ t.stage++; t.stageAt=new Date().toISOString(); renderKanban(); toast('تم النقل للمرحلة التالية ✓'); pushToSheet('update',{id:t.id,stage:t.stage,stageAt:t.stageAt}); }
 }
+function saveAccountData(id) {
+  const t = teachers.find(x=>String(x.id)===String(id));
+  if(!t){ toast('معلم غير موجود'); return; }
+  
+  const profileLinkEl = document.getElementById('modal-profilelink');
+  const appEmailEl    = document.getElementById('modal-appemail');
+  const appPasswordEl = document.getElementById('modal-apppassword');
+  
+  if(!profileLinkEl||!appEmailEl||!appPasswordEl){ toast('خطأ: الحقول غير موجودة'); return; }
+  
+  const profileLink  = profileLinkEl.value.trim();
+  const appEmail     = appEmailEl.value.trim();
+  const appPassword  = appPasswordEl.value.trim();
+  
+  if(!profileLink){ toast('أدخل رابط صفحة المعلم'); return; }
+  if(!appEmail)   { toast('أدخل الإيميل'); return; }
+  if(!appPassword){ toast('أدخل كلمة السر'); return; }
+  
+  // Normalize profile link
+  const cleanLink = profileLink.replace(/^https?:\/\//, '');
+  
+  t.profileLink  = cleanLink;
+  t.appEmail     = appEmail;
+  t.appPassword  = appPassword;
+  t.stage        = 8;
+  t.stageAt      = new Date().toISOString();
+  
+  pushToSheet('update', {
+    id: t.id,
+    stage: t.stage,
+    stageAt: t.stageAt,
+    profileLink: cleanLink,
+    appEmail,
+    appPassword
+  });
+  
+  closeModal('teacherModal');
+  renderKanban();
+  toast('✅ تم حفظ البيانات وتحريك المعلم لأونبوردينج ١');
+}
+
 function confirmFullAccept(id) {
   const t=teachers.find(x=>String(x.id)===String(id));if(!t)return;
   if(confirm('هل أنت متأكد من قبول '+t.name+' بشكل كلي ومباشر؟\nسيتم نقله مباشرة لمرحلة مكتمل.')){
@@ -1283,7 +1354,7 @@ function openTeacherModal(id) {
       ${t.stage===7?`<div style="width:100%;margin-top:0.75rem;background:var(--blue-light);border:1px solid var(--border);border-radius:8px;padding:0.85rem">
         <div style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;color:var(--blue)">⚙️ إدخال بيانات تفعيل الحساب</div>
         <div style="margin-bottom:0.5rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">رابط صفحة المعلم على التطبيق</label>
-          <input class="form-input" id="modal-profilelink" placeholder="https://go.gaga-app.com/..." style="margin-bottom:0.4rem" dir="ltr" value="${t.profileLink||''}"></div>
+          <input class="form-input" id="modal-profilelink" placeholder="https://go.gaga-app.com/..." style="margin-bottom:0.4rem" dir="ltr" value="${t.profileLink?(t.profileLink.startsWith('http')?t.profileLink:'https://'+t.profileLink):''}"></div>
         <div style="margin-bottom:0.5rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">الإيميل (بيانات الدخول للتطبيق)</label>
           <input class="form-input" id="modal-appemail" placeholder="teacher@email.com" dir="ltr" value="${t.appEmail||t.email||''}"></div>
         <div style="margin-bottom:0.75rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">كلمة السر (بيانات الدخول للتطبيق)</label>
@@ -1863,7 +1934,7 @@ function renderLib() {
         const watched = watchedVideos[v.id];
         return '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:0.5rem">'
           // Video header - clickable
-          +'<div style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;cursor:pointer;background:'+(watched?'var(--green-light)':'var(--off)')+'" onclick="toggleVid(\"'+v.id+'\")">'
+          +'<div style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;cursor:pointer;background:'+(watched?'var(--green-light)':'var(--off)')+'" onclick="toggleVid('+v.id+')">'
           +'<span style="background:'+(watched?'var(--green)':'var(--slate-mid)')+';color:#fff;font-size:0.72rem;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(watched?'✓':(j+1))+'</span>'
           +'<div style="flex:1">'
           +'<div style="font-size:0.88rem;font-weight:600;color:'+(watched?'var(--green)':'var(--text)')+'">'+v.title+'</div>'
@@ -1931,6 +2002,157 @@ function renderHome() {
 // ═══════════════════════════════════════════
 // TEACHER REQUESTS
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// DYNAMIC FORM DEFINITIONS
+// ═══════════════════════════════════════════
+let reqFormDefs = {
+  new_activity: {
+    label: 'إضافة نشاط جديد', icon: '✨',
+    fields: [
+      {id:'f1', type:'text',     label:'عنوان النشاط',           required:true,  placeholder:'مثال: رياضيات مستوى ابتدائي'},
+      {id:'f2', type:'textarea', label:'النبذة المبسطة',          required:true,  placeholder:'وصف مختصر يجذب العملاء...'},
+      {id:'f3', type:'textarea', label:'الأهداف التعليمية',       required:false, placeholder:'اكتب الأهداف التعليمية...'},
+      {id:'f4', type:'textarea', label:'وصف النشاط',              required:false, placeholder:'وصف تفصيلي...'},
+      {id:'f5', type:'number',   label:'عدد الجلسات',             required:true,  placeholder:'مثال: 8'},
+      {id:'f6', type:'textarea', label:'عناوين الجلسات',          required:false, placeholder:'الجلسة الأولى... الجلسة الثانية...'},
+      {id:'f7', type:'number',   label:'مدة النشاط بالدقائق',    required:true,  placeholder:'مثال: 60'},
+      {id:'f8', type:'text',     label:'الأعمار المستهدفة',       required:true,  placeholder:'مثال: 6-12 سنة'},
+      {id:'f9', type:'number',   label:'السعر بالريال السعودي',   required:true,  placeholder:'مثال: 150'},
+      {id:'f10',type:'select',   label:'تصنيف النشاط',            required:true,  options:['تأسيس ومهارات','تقوية ومتابعة مدرسية','مواهب ومهارات']},
+      {id:'f11',type:'yesno',    label:'هل البرنامج مستويات؟',   required:true},
+      {id:'f12',type:'select',   label:'لغة النشاط',              required:true,  options:['العربية','الإنجليزية','ثنائي اللغة']},
+      {id:'f13',type:'textarea', label:'ملاحظات إضافية',          required:false, placeholder:'أي ملاحظات...'},
+    ]
+  },
+  edit: {
+    label: 'تعديل نشاط', icon: '✏️',
+    fields: [
+      {id:'e1', type:'text',     label:'اسم النشاط الحالي',      required:true,  placeholder:'النشاط المراد تعديله'},
+      {id:'e2', type:'textarea', label:'التعديل المطلوب',         required:true,  placeholder:'اشرح التعديل بالتفصيل...'},
+    ]
+  },
+  disable: {
+    label: 'تعطيل نشاط', icon: '⏸️',
+    fields: [
+      {id:'d1', type:'text',     label:'اسم النشاط',              required:true,  placeholder:'النشاط المراد تعطيله'},
+      {id:'d2', type:'text',     label:'السبب',                   required:true,  placeholder:'سبب التعطيل'},
+    ]
+  },
+  leave: {
+    label: 'طلب إجازة', icon: '🌴',
+    fields: [
+      {id:'l1', type:'date',     label:'من تاريخ',                required:true},
+      {id:'l2', type:'date',     label:'حتى تاريخ',               required:true},
+      {id:'l3', type:'text',     label:'السبب',                   required:false, placeholder:'سبب الإجازة'},
+    ]
+  },
+  deactivate: {
+    label: 'تعطيل الحساب', icon: '🔒',
+    fields: [
+      {id:'da1',type:'text',     label:'المدة المتوقعة',           required:true,  placeholder:'مثال: شهر واحد'},
+      {id:'da2',type:'textarea', label:'السبب',                   required:false, placeholder:'سبب التعطيل...'},
+    ]
+  }
+};
+
+let currentFormType = 'new_activity';
+
+function selectFormType(type, el) {
+  currentFormType = type;
+  document.querySelectorAll('#page-formDesign .btn').forEach(b=>b.className='btn btn-ghost btn-sm');
+  el.className = 'btn btn-orange btn-sm';
+  renderFormDesign();
+}
+
+function renderFormDesign() {
+  const def = reqFormDefs[currentFormType];
+  if(!def) return;
+  document.getElementById('formDesignTitle').textContent = 'حقول فورم: ' + def.label;
+
+  // Fields list
+  const listEl = document.getElementById('formFieldsList');
+  if(!def.fields.length) {
+    listEl.innerHTML = '<div class="empty">لا توجد حقول — أضف حقلاً جديداً</div>';
+  } else {
+    listEl.innerHTML = def.fields.map((f,i) => `
+      <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;display:flex;align-items:flex-start;gap:0.75rem">
+        <div style="flex:1">
+          <div style="font-size:0.85rem;font-weight:600">${f.label} ${f.required?'<span style="color:var(--red)">*</span>':''}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem">${f.type}${f.options?' · '+f.options.join(' / '):''}</div>
+        </div>
+        <div style="display:flex;gap:0.3rem;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="editField('${currentFormType}',${i})">تعديل</button>
+          <button class="btn btn-red btn-sm" onclick="deleteField('${currentFormType}',${i})">حذف</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Preview
+  renderFormPreview();
+}
+
+function renderFormPreview() {
+  const def = reqFormDefs[currentFormType];
+  const previewEl = document.getElementById('formPreview');
+  if(!def||!previewEl) return;
+  previewEl.innerHTML = def.fields.map(f => {
+    let input = '';
+    if(f.type==='text'||f.type==='number'||f.type==='date')
+      input = `<input class="form-input" type="${f.type}" placeholder="${f.placeholder||''}" disabled>`;
+    else if(f.type==='textarea')
+      input = `<textarea class="form-input" placeholder="${f.placeholder||''}" disabled style="height:70px"></textarea>`;
+    else if(f.type==='select')
+      input = `<select class="form-input" disabled><option>اختر...</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+    else if(f.type==='yesno')
+      input = `<div style="display:flex;gap:0.5rem"><button class="btn btn-ghost btn-sm" disabled>نعم</button><button class="btn btn-ghost btn-sm" disabled>لا</button></div>`;
+    return `<div class="form-field"><label class="form-label">${f.label}${f.required?'<span style="color:var(--red)">*</span>':''}</label>${input}</div>`;
+  }).join('') || '<div class="empty">لا توجد حقول</div>';
+}
+
+function addFormField() {
+  const type = prompt('نوع الحقل (text / textarea / number / date / select / yesno):','text');
+  if(!type) return;
+  const label = prompt('عنوان الحقل:');
+  if(!label) return;
+  const required = confirm('هل الحقل إجباري؟');
+  const placeholder = (type==='select'||type==='yesno') ? '' : (prompt('النص التوضيحي (placeholder):')||'');
+  let options = [];
+  if(type==='select') {
+    const opts = prompt('الخيارات (افصل بين كل خيار بفاصلة):','خيار ١,خيار ٢');
+    if(opts) options = opts.split(',').map(o=>o.trim());
+  }
+  const id = 'f'+Date.now();
+  reqFormDefs[currentFormType].fields.push({id, type, label, required, placeholder, options: options.length?options:undefined});
+  renderFormDesign();
+  toast('تم إضافة الحقل ✓');
+}
+
+function editField(formType, idx) {
+  const f = reqFormDefs[formType].fields[idx];
+  if(!f) return;
+  const label = prompt('عنوان الحقل:', f.label);
+  if(!label) return;
+  const placeholder = prompt('النص التوضيحي:', f.placeholder||'') || '';
+  const required = confirm('هل الحقل إجباري؟');
+  if(f.type==='select') {
+    const opts = prompt('الخيارات (افصل بفاصلة):', (f.options||[]).join(','));
+    if(opts) f.options = opts.split(',').map(o=>o.trim());
+  }
+  f.label = label;
+  f.placeholder = placeholder;
+  f.required = required;
+  renderFormDesign();
+  toast('تم تعديل الحقل ✓');
+}
+
+function deleteField(formType, idx) {
+  if(!confirm('حذف هذا الحقل؟')) return;
+  reqFormDefs[formType].fields.splice(idx, 1);
+  renderFormDesign();
+  toast('تم حذف الحقل');
+}
+
 const REQ_FORMS={
   new_activity:`<div class="form-field"><label class="form-label">اسم النشاط</label><input class="form-input" placeholder="مثال: رياضيات — ابتدائي"></div><div class="form-grid"><div class="form-field"><label class="form-label">السعر/ساعة</label><input class="form-input" placeholder="50 ريال"></div><div class="form-field"><label class="form-label">المستوى</label><input class="form-input" placeholder="ابتدائي"></div></div><div class="form-field"><label class="form-label">وصف النشاط</label><textarea class="form-input"></textarea></div>`,
   edit:`<div class="form-field"><label class="form-label">اسم النشاط</label><input class="form-input"></div><div class="form-field"><label class="form-label">التعديل المطلوب</label><textarea class="form-input"></textarea></div>`,
@@ -1938,7 +2160,34 @@ const REQ_FORMS={
   leave:`<div class="form-grid"><div class="form-field"><label class="form-label">من تاريخ</label><input class="form-input" type="date"></div><div class="form-field"><label class="form-label">حتى تاريخ</label><input class="form-input" type="date"></div></div><div class="form-field"><label class="form-label">السبب</label><input class="form-input"></div>`,
   deactivate:`<div class="form-field"><label class="form-label">المدة المتوقعة</label><input class="form-input" placeholder="مثال: شهر واحد"></div><div class="form-field"><label class="form-label">السبب</label><textarea class="form-input"></textarea></div>`,
 };
-function updateReqForm(){ document.getElementById('req-form-fields').innerHTML=REQ_FORMS[document.getElementById('req-type').value]||''; }
+function updateReqForm(){
+  const type = document.getElementById('req-type')?.value;
+  if(!type){ document.getElementById('req-form-fields').innerHTML=''; return; }
+  // Use dynamic form defs if available
+  const def = reqFormDefs[type];
+  if(def && def.fields.length) {
+    document.getElementById('req-form-fields').innerHTML = def.fields.map(f=>{
+      let input = '';
+      if(f.type==='text'||f.type==='number'||f.type==='date')
+        input=`<input class="form-input" id="rff-${f.id}" type="${f.type}" placeholder="${f.placeholder||''}">`;
+      else if(f.type==='textarea')
+        input=`<textarea class="form-input" id="rff-${f.id}" placeholder="${f.placeholder||''}" style="height:80px"></textarea>`;
+      else if(f.type==='select')
+        input=`<select class="form-input" id="rff-${f.id}"><option value="">اختر...</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+      else if(f.type==='yesno')
+        input=`<div style="display:flex;gap:0.5rem"><button type="button" class="btn btn-ghost btn-sm" onclick="setYesNo('rff-${f.id}','yes',this)">نعم</button><button type="button" class="btn btn-ghost btn-sm" onclick="setYesNo('rff-${f.id}','no',this)">لا</button><input type="hidden" id="rff-${f.id}"></div>`;
+      return `<div class="form-field"><label class="form-label">${f.label}${f.required?'<span style="color:var(--red)">*</span>':''}</label>${input}</div>`;
+    }).join('');
+  } else {
+    document.getElementById('req-form-fields').innerHTML = REQ_FORMS[type]||'';
+  }
+}
+
+function setYesNo(id, val, btn) {
+  document.getElementById(id).value = val;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='btn btn-ghost btn-sm');
+  btn.className = 'btn btn-orange btn-sm';
+}
 function submitTeacherReq() {
   const type=document.getElementById('req-type').value;
   if(!type){toast('اختر نوع الطلب');return;}
@@ -1990,6 +2239,10 @@ function goToStep2() {
   document.getElementById('dataStep1').style.display='none';
   document.getElementById('dataStep2').style.display='block';
   document.getElementById('dataModalTitle').textContent='📋 إرسال بياناتك — الخطوة ٢ من ٢';
+}
+
+function openSubjectModal() {
+  document.getElementById('subjectModal').classList.add('open');
 }
 
 function saveSubjects() {
