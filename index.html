@@ -1,0 +1,2879 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAGA — Teacher Onboarding System</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --orange: #E8920A; --orange-dim: #C4740A; --orange-light: #FEF3DC; --orange-xlight: #FFFAF2;
+  --dark: #0F1117; --slate: #1E2433; --slate-mid: #2D3748; --slate-light: #3D4A5C;
+  --white: #FFFFFF; --off: #F7F8FC; --border: #E4E8F0;
+  --text: #1A2030; --muted: #6B7A99; --muted-light: #9BA8BF;
+  --green: #0A7A48; --green-light: #E6F7EE; --green-mid: #C3EDD8;
+  --red: #C0392B; --red-light: #FEF0EE;
+  --blue: #1A4FA8; --blue-light: #EEF3FF;
+  --purple: #6B3FA0; --purple-light: #F3EEFF;
+  --teal: #0A7A7A; --teal-light: #E6F5F5;
+  --yellow: #D4860A; --yellow-light: #FFF8E6;
+}
+body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--off); color: var(--text); min-height: 100vh; }
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: var(--dark); height: 54px; display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; position: sticky; top: 0; z-index: 200; border-bottom: 2px solid var(--orange); }
+.topbar-logo { color: var(--orange); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em; }
+.topbar-role { background: var(--slate-mid); color: var(--muted-light); font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 20px; }
+.topbar-sep { flex: 1; }
+.db-status { font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 20px; cursor: pointer; }
+.db-connected { background: var(--green-light); color: var(--green); }
+.db-disconnected { background: var(--red-light); color: var(--red); }
+.db-loading { background: var(--yellow-light); color: var(--yellow); }
+.layout { display: flex; flex: 1; }
+.sidebar { width: 220px; background: var(--slate); min-height: calc(100vh - 54px); padding: 1rem 0; flex-shrink: 0; position: sticky; top: 54px; height: calc(100vh - 54px); overflow-y: auto; }
+.sidebar-section { padding: 0.5rem 0.75rem; font-size: 0.68rem; font-weight: 700; color: var(--muted-light); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.75rem; }
+.nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; color: #9BA8BF; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; border-right: 3px solid transparent; }
+.nav-item:hover { background: var(--slate-mid); color: var(--white); }
+.nav-item.active { background: var(--slate-mid); color: var(--orange); border-right-color: var(--orange); font-weight: 600; }
+.nav-badge { background: var(--orange); color: #fff; font-size: 0.65rem; padding: 0.1rem 0.45rem; border-radius: 20px; margin-right: auto; }
+.main { flex: 1; padding: 1.5rem; overflow-x: hidden; }
+.page { display: none; }
+.page.active { display: block; }
+.page-header { margin-bottom: 1.5rem; }
+.page-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.2rem; }
+.page-sub { font-size: 0.85rem; color: var(--muted); }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+.stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.stat-num { font-size: 1.6rem; font-weight: 700; color: var(--orange); }
+.stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+.kanban { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.75rem; }
+.kol { min-width: 195px; max-width: 215px; flex-shrink: 0; background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.kol-head { padding: 0.65rem 0.85rem; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.kol-cnt { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; color: #fff; }
+.kol-body { padding: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 80px; }
+.kh0 { background: #EEF3FF; } .kh0 .kol-cnt { background: var(--blue); }
+.kh1 { background: var(--yellow-light); } .kh1 .kol-cnt { background: var(--yellow); }
+.kh2 { background: var(--orange-light); } .kh2 .kol-cnt { background: var(--orange); }
+.kh3 { background: var(--purple-light); } .kh3 .kol-cnt { background: var(--purple); }
+.kh4 { background: var(--teal-light); } .kh4 .kol-cnt { background: var(--teal); }
+.kh5 { background: var(--yellow-light); } .kh5 .kol-cnt { background: var(--yellow); }
+.kh6 { background: var(--green-light); } .kh6 .kol-cnt { background: var(--green); }
+.kh-rej { background: var(--red-light); } .kh-rej .kol-cnt { background: var(--red); }
+.tcard { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.75rem; cursor: pointer; transition: all 0.15s; }
+.tcard:hover { border-color: var(--orange); background: var(--orange-xlight); }
+.tcard-name { font-size: 0.83rem; font-weight: 600; margin-bottom: 0.12rem; }
+.tcard-sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.1rem; }
+.tcard-time { font-size: 0.68rem; color: var(--muted-light); margin-bottom: 0.35rem; }
+.sla-warn { font-size: 0.68rem; color: var(--red); font-weight: 700; margin-bottom: 0.3rem; }
+.tcard-actions { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.tc-btn { font-size: 0.68rem; padding: 0.18rem 0.5rem; border-radius: 4px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+.tc-next { background: var(--orange); color: #fff; }
+.tc-view { background: #EEE; color: #555; }
+.tc-eval { background: var(--blue-light); color: var(--blue); }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.25rem; }
+.card-head { padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.card-title { font-size: 0.95rem; font-weight: 700; }
+.card-body { padding: 1.2rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem; border: none; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.btn-orange { background: var(--orange); color: #fff; }
+.btn-orange:hover { background: var(--orange-dim); }
+.btn-slate { background: var(--slate); color: #fff; }
+.btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+.btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+.btn-green { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
+.btn-red { background: var(--red-light); color: var(--red); border: 1px solid #f5bbb7; }
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+.btn-full { width: 100%; justify-content: center; }
+.badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-orange { background: var(--orange-light); color: var(--orange-dim); }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-gray { background: #EEE; color: #555; }
+.badge-purple { background: var(--purple-light); color: var(--purple); }
+.badge-yellow { background: var(--yellow-light); color: var(--yellow); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+.form-field { margin-bottom: 0.85rem; }
+.form-label { font-size: 0.8rem; font-weight: 600; color: var(--slate-light); margin-bottom: 0.3rem; display: block; }
+.form-input { width: 100%; padding: 0.6rem 0.85rem; border: 1.5px solid var(--border); border-radius: 7px; font-size: 0.88rem; font-family: inherit; direction: rtl; transition: border-color 0.15s; background: var(--off); }
+.form-input:focus { outline: none; border-color: var(--orange); background: #fff; }
+textarea.form-input { height: 80px; resize: vertical; }
+select.form-input { cursor: pointer; }
+.chart-bar-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+.chart-bar-row { display: flex; align-items: center; gap: 0.75rem; }
+.chart-bar-label { font-size: 0.78rem; min-width: 120px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chart-bar-bg { flex: 1; background: var(--off); border-radius: 20px; height: 20px; overflow: hidden; border: 1px solid var(--border); }
+.chart-bar-fill { height: 100%; border-radius: 20px; background: var(--orange); display: flex; align-items: center; padding-right: 6px; transition: width 0.5s; }
+.chart-bar-val { font-size: 0.68rem; color: #fff; font-weight: 700; }
+.chart-bar-count { font-size: 0.75rem; color: var(--muted); min-width: 28px; }
+.subject-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+.s-tag { padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.78rem; cursor: pointer; border: 1.5px solid var(--border); background: var(--off); transition: all 0.15s; user-select: none; }
+.s-tag:hover { border-color: var(--orange); color: var(--orange); }
+.s-tag.sel { background: var(--orange); color: #fff; border-color: var(--orange); }
+.g-tag { padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.78rem; cursor: pointer; border: 1.5px solid var(--border); background: var(--off); transition: all 0.15s; user-select: none; }
+.g-tag.sel { background: var(--blue); color: #fff; border-color: var(--blue); }
+.portal { max-width: 600px; margin: 0 auto; }
+.portal-hero { background: var(--dark); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; overflow: hidden; border-bottom: 3px solid var(--orange); }
+.portal-logo { color: var(--orange); font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.portal-name { color: #fff; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem; }
+.portal-stage { color: #888; font-size: 0.82rem; }
+.stage-overview { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.stage-overview-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; }
+.stage-hide-btn { font-size: 0.72rem; color: var(--muted); cursor: pointer; background: none; border: 1px solid var(--border); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: inherit; }
+.overview-steps { display: flex; flex-direction: column; gap: 0.4rem; }
+.ov-step { display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.75rem; border-radius: 7px; font-size: 0.82rem; }
+.ov-step.done { background: var(--green-light); color: var(--green); }
+.ov-step.active { background: var(--orange-light); color: var(--orange-dim); font-weight: 700; border: 1px solid var(--orange); }
+.ov-step.future { color: var(--muted); background: var(--off); }
+.ov-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; }
+.ov-step.done .ov-dot { background: var(--green); color: #fff; }
+.ov-step.active .ov-dot { background: var(--orange); color: #fff; }
+.ov-step.future .ov-dot { background: #DDD; color: #888; }
+.vid-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+.vid-head { background: var(--slate); padding: 0.85rem 1.1rem; color: #fff; font-size: 0.9rem; font-weight: 700; }
+.vid-body { padding: 1.1rem; }
+.vid-frame { background: #111; border-radius: 8px; height: 190px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem; color: #555; font-size: 1.6rem; overflow: hidden; }
+.vid-frame iframe { width: 100%; height: 100%; border: none; }
+.vid-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.85rem; }
+.vid-example { background: #111; border-radius: 8px; height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.vid-example iframe { width: 100%; height: 100%; border: none; }
+.sla-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--blue-light); color: var(--blue); border-radius: 20px; padding: 0.22rem 0.7rem; font-size: 0.72rem; font-weight: 600; margin-bottom: 0.75rem; }
+.note { border-radius: 8px; padding: 0.7rem 0.9rem; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.85rem; }
+.note-orange { background: var(--orange-light); border-right: 3px solid var(--orange); color: #7A4800; }
+.note-blue { background: var(--blue-light); border-right: 3px solid var(--blue); color: #1A3A80; }
+.note-green { background: var(--green-light); border-right: 3px solid var(--green); color: #065030; }
+.note-red { background: var(--red-light); border-right: 3px solid var(--red); color: #8B1A10; }
+.policy-item { background: var(--off); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; }
+.policy-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between; }
+.policy-body { font-size: 0.83rem; color: var(--muted); line-height: 1.7; white-space: pre-line; }
+.policy-edit-area { display: none; margin-top: 0.75rem; }
+.policy-edit-area.open { display: block; }
+.link-box { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
+.link-text { flex: 1; font-size: 0.78rem; color: var(--blue); direction: ltr; text-align: left; word-break: break-all; }
+.link-copy { background: var(--slate); color: #fff; border: none; padding: 0.28rem 0.7rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.req-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; }
+.req-header { display: flex; align-items: flex-start; gap: 0.75rem; }
+.req-icon { font-size: 1.3rem; flex-shrink: 0; }
+.req-info { flex: 1; }
+.req-teacher { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.15rem; }
+.req-detail { font-size: 0.82rem; color: var(--muted); line-height: 1.6; white-space: pre-line; }
+.req-date { font-size: 0.72rem; color: var(--muted-light); margin-top: 0.3rem; }
+.req-actions { margin-top: 0.65rem; display: flex; gap: 0.4rem; }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; padding: 1rem; }
+.overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 14px; width: 520px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.25); }
+.modal-head { background: var(--dark); padding: 1rem 1.25rem; color: #fff; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.modal-close { background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; }
+.modal-body { padding: 1.25rem; }
+.m-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-start; }
+.m-label { font-size: 0.78rem; color: var(--muted); min-width: 100px; padding-top: 0.1rem; flex-shrink: 0; }
+.m-val { font-size: 0.85rem; font-weight: 500; flex: 1; }
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { background: var(--off); font-size: 0.75rem; font-weight: 700; color: var(--muted); padding: 0.6rem 0.85rem; text-align: right; border-bottom: 1px solid var(--border); }
+.tbl td { padding: 0.65rem 0.85rem; font-size: 0.82rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--off); }
+.divider { height: 1px; background: var(--border); margin: 1rem 0; }
+.toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--dark); color: #fff; padding: 0.6rem 1.4rem; border-radius: 8px; font-size: 0.85rem; opacity: 0; transition: all 0.3s; z-index: 999; border-right: 3px solid var(--orange); pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.88rem; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* LOGIN SCREEN */
+.login-screen { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
+.login-box { background: var(--slate); border-radius: 16px; padding: 2rem; width: 100%; max-width: 380px; border: 1px solid var(--slate-light); }
+.login-logo { color: var(--orange); font-size: 1.6rem; font-weight: 700; text-align: center; margin-bottom: 0.3rem; letter-spacing: 0.1em; }
+.login-sub { color: var(--muted); font-size: 0.82rem; text-align: center; margin-bottom: 1.75rem; }
+.login-tabs { display: flex; background: var(--dark); border-radius: 8px; padding: 0.25rem; margin-bottom: 1.5rem; gap: 0.25rem; }
+.login-tab { flex: 1; padding: 0.5rem; border: none; border-radius: 6px; font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--muted); background: transparent; }
+.login-tab.active { background: var(--orange); color: #fff; }
+.login-field { margin-bottom: 1rem; }
+.login-label { font-size: 0.78rem; font-weight: 600; color: var(--muted-light); margin-bottom: 0.35rem; display: block; }
+.login-input { width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--slate-light); border-radius: 8px; font-size: 0.9rem; font-family: inherit; background: var(--dark); color: var(--white); direction: ltr; transition: border-color 0.15s; }
+.login-input:focus { outline: none; border-color: var(--orange); }
+.login-btn { width: 100%; padding: 0.75rem; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 0.5rem; transition: background 0.15s; }
+.login-btn:hover { background: var(--orange-dim); }
+.login-err { background: var(--red-light); color: var(--red); border-radius: 7px; padding: 0.6rem 0.85rem; font-size: 0.82rem; margin-top: 0.75rem; display: none; text-align: center; }
+.login-err.show { display: block; }
+@media (max-width: 768px) {
+  .sidebar { width: 52px; }
+  .sidebar-section { display: none; }
+  .nav-item { padding: 0.7rem; justify-content: center; font-size: 0; }
+  .nav-item span, .nav-badge { display: none; }
+  .main { padding: 1rem 0.75rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .kanban { flex-direction: column; }
+  .kol { min-width: 100%; max-width: 100%; }
+  .portal { padding: 0.75rem 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">GAGA</div>
+    <div class="login-sub">منصة تأهيل المعلمين</div>
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-teacher" style="flex:1">معلم</button>
+      <button class="login-tab" id="tab-admin" style="flex:1.5">Admin / فريق التقييم</button>
+    </div>
+    <div id="login-teacher-form" style="display:block">
+      <div class="login-field"><label class="login-label">الإيميل</label><input class="login-input" id="li-email" type="email" placeholder="teacher@email.com" autocomplete="email"></div>
+      <div class="login-field"><label class="login-label">كلمة السر</label><input class="login-input" id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="login-btn" id="li-btn">دخول</button>
+    </div>
+    <div id="login-admin-form" style="display:none">
+      <div class="login-field"><label class="login-label">كلمة السر</label><input class="login-input" id="li-admin-pass" type="password" placeholder="••••••••"></div>
+      <button class="login-btn" id="li-admin-btn">دخول</button>
+    </div>
+    <div class="login-err" id="li-err">إيميل أو كلمة سر غير صحيحة</div>
+  </div>
+</div>
+
+<div class="app" id="mainApp" style="display:none">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">GAGA</div>
+  <div class="topbar-role" id="roleLabel">Admin</div>
+  <div class="topbar-sep"></div>
+  <div class="db-status db-disconnected" id="dbStatus" onclick="openDbSettings()" title="إعدادات قاعدة البيانات" style="display:none">⚡ غير متصل</div>
+  <select id="roleSwitcher" onchange="switchRole(this.value)" style="background:var(--slate-mid);color:#ccc;border:1px solid var(--slate-light);padding:0.3rem 0.6rem;border-radius:6px;font-family:inherit;font-size:0.78rem;cursor:pointer">
+    <option value="admin">Admin</option>
+    <option value="eval">فريق التقييم</option>
+    <option value="teacher">المعلم</option>
+  </select>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+  <div id="sbAdmin">
+    <div class="sidebar-section">الرئيسية</div>
+    <div class="nav-item active" onclick="goPage('analytics',this)">📈 Analytics</div>
+    <div class="nav-item" onclick="goPage('pipeline',this)">📊 Pipeline</div>
+    <div class="nav-item" onclick="goPage('requests',this)">📋 طلبات المعلمين <span class="nav-badge" id="req-badge">0</span></div>
+    <div class="nav-item" onclick="goPage('formDesign',this)">🛠 إدارة فورمات الطلبات</div>
+    <div class="sidebar-section">الإعدادات</div>
+    <div class="nav-item" onclick="goPage('videos',this)">🎬 الفيديوهات</div>
+    <div class="nav-item" onclick="goPage('contracts',this)">📄 العقود</div>
+    <div class="nav-item" onclick="goPage('messages',this)">💬 الرسائل</div>
+    <div class="nav-item" onclick="goPage('policies',this)">📜 السياسات</div>
+    <div class="nav-item" onclick="goPage('banner',this)">📢 البانر</div>
+    <div class="nav-item" onclick="goPage('addTeacher',this)">➕ إضافة معلم</div>
+    <div class="nav-item" onclick="goPage('bulkAdd',this)">📥 Bulk إضافة</div>
+    <div class="nav-item" onclick="goPage('dbSettings',this)">⚙️ إعدادات DB</div>
+  </div>
+  <div id="sbEval" style="display:none">
+    <div class="sidebar-section">التقييم</div>
+    <div class="nav-item active" onclick="goPage('evalQueue',this)">🔍 قائمة التقييم</div>
+    <div class="nav-item" onclick="goPage('analytics',this)">📈 Analytics</div>
+    <div class="nav-item" onclick="goPage('pipeline',this)">📊 Pipeline</div>
+  </div>
+  <div id="sbTeacher" style="display:none">
+    <div class="sidebar-section">بورتالي</div>
+    <div class="nav-item active" onclick="goPage('tPortal',this)" id="nav-tPortal">🎯 مراحل التأهيل</div>
+    <div class="nav-item" onclick="goPage('tLib',this)" id="nav-tLib" style="display:none">📚 مكتبة الفيديوهات</div>
+    <div class="nav-item" onclick="goPage('tHome',this)" id="nav-tHome" style="display:none">🏠 صفحتي</div>
+    <div class="nav-item" onclick="goPage('tReqs',this)" id="nav-tReqs" style="display:none">📝 طلباتي</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══ DB SETTINGS ══ -->
+<div id="page-dbSettings" class="page">
+  <div class="page-header"><div class="page-title">⚙️ إعدادات قاعدة البيانات</div><div class="page-sub">ربط النظام بـ Google Sheets</div></div>
+  <div class="card" style="max-width:560px">
+    <div class="card-head"><div class="card-title">ربط Google Sheets</div></div>
+    <div class="card-body">
+      <div class="note note-blue">
+        📋 <strong>خطوات الربط:</strong><br><br>
+        1. روح <strong>sheets.new</strong> وسمّي الـ Sheet: <strong>GAGA Teachers DB</strong><br>
+        2. اعمل الأعمدة التالية في الصف الأول:<br>
+        <code style="background:#eee;padding:0.2rem 0.4rem;border-radius:4px;font-size:0.75rem;direction:ltr;display:inline-block;margin-top:0.3rem">id | name | phone | email | password | classification | category | stage | addedAt | stageAt | vid1 | vid2 | subjects | grades | rejNote | profileLink | appEmail | appPassword</code><br><br>
+        3. من القائمة: <strong>Extensions → Apps Script</strong><br>
+        4. الصق الكود من ملف <strong>gaga_appscript.js</strong> المرفق<br>
+        5. اضغط <strong>Deploy → New Deployment → Web App</strong><br>
+        6. Execute as: <strong>Me</strong> | Who has access: <strong>Anyone</strong><br>
+        7. انسخ رابط الـ Deployment وضعه هنا
+      </div>
+      <div class="form-field">
+        <label class="form-label">رابط Apps Script (Deployment URL)</label>
+        <input class="form-input" id="db-url" placeholder="https://script.google.com/macros/s/..." dir="ltr">
+      </div>
+      <div style="display:flex;gap:0.6rem">
+        <button class="btn btn-orange" style="flex:1" onclick="saveDbUrl()">حفظ وتجربة الاتصال</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearDb()">مسح</button>
+      </div>
+      <div id="db-test-result" style="margin-top:0.75rem"></div>
+    </div>
+  </div>
+  <div class="card" style="max-width:560px">
+    <div class="card-head"><div class="card-title">الحالة</div></div>
+    <div class="card-body">
+      <div id="db-status-detail">
+        <div class="note note-orange">⚡ النظام يعمل حالياً بداتا تجريبية في الذاكرة. أضف رابط الـ Apps Script لربطه بـ Google Sheets.</div>
+      </div>
+      <button class="btn btn-slate btn-sm" onclick="syncFromSheet()" style="margin-top:0.5rem">🔄 مزامنة من Sheet الآن</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ANALYTICS ══ -->
+<div id="page-analytics" class="page active">
+  <div class="page-header">
+    <div class="page-title">📈 Analytics</div>
+    <div class="page-sub">تحليل أداء عملية التأهيل</div>
+  </div>
+  <div style="display:flex;gap:0.6rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+    <span style="font-size:0.8rem;color:var(--muted);font-weight:600">فلتر:</span>
+    <select class="form-input" style="width:auto;padding:0.4rem 0.7rem" id="f-stage" onchange="renderAnalytics()">
+      <option value="">كل المراحل</option>
+      <option value="1">في انتظار الإرسال — فيديو ١</option>
+      <option value="2">قيد المراجعة — فيديو ١</option>
+      <option value="3">في انتظار الإرسال — فيديو ٢</option>
+      <option value="4">قيد المراجعة — فيديو ٢</option>
+      <option value="5">اجتماع</option>
+      <option value="6">بيانات</option>
+      <option value="7">عمل الحساب</option>
+      <option value="8">أونبوردينج ١</option>
+      <option value="9">أونبوردينج ٢</option>
+      <option value="10">أونبوردينج ٣</option>
+      <option value="11">نشط ✅</option>
+    </select>
+    <select class="form-input" style="width:auto;padding:0.4rem 0.7rem" id="f-cat" onchange="renderAnalytics()">
+      <option value="">كل الكاتيجوريز</option>
+      <option>تأسيس ومهارات</option><option>تقوية ومتابعة مدرسية</option><option>مواهب ومهارات</option>
+    </select>
+    <select class="form-input" style="width:auto;padding:0.4rem 0.7rem" id="f-period" onchange="renderAnalytics()">
+      <option value="all">كل الوقت</option>
+      <option value="7">آخر 7 أيام</option>
+      <option value="30">آخر 30 يوم</option>
+    </select>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="a-total">0</div><div class="stat-label">إجمالي المعلمين</div></div>
+    <div class="stat-card"><div class="stat-num" id="a-done">0</div><div class="stat-label">مقبول / Onboarded</div></div>
+    <div class="stat-card"><div class="stat-num" id="a-avg">0</div><div class="stat-label">متوسط أيام التأهيل</div></div>
+    <div class="stat-card"><div class="stat-num" id="a-rej">0</div><div class="stat-label">مرفوض</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="card"><div class="card-head"><div class="card-title">التوزيع بالكاتيجوري</div></div><div class="card-body"><div class="chart-bar-wrap" id="ch-cat"></div></div></div>
+    <div class="card"><div class="card-head"><div class="card-title">التوزيع بالمرحلة</div></div><div class="card-body"><div class="chart-bar-wrap" id="ch-stage"></div></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="card"><div class="card-head"><div class="card-title">متوسط الأيام في كل مرحلة</div></div><div class="card-body"><div class="chart-bar-wrap" id="ch-days"></div></div></div>
+    <div class="card"><div class="card-head"><div class="card-title">أكثر المواد تقديماً</div></div><div class="card-body"><div class="chart-bar-wrap" id="ch-subj"></div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">كل المعلمين</div></div>
+    <div class="card-body" style="padding:0"><table class="tbl" id="a-table"></table></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="page-title" style="margin-bottom:1rem">📋 تحليل طلبات المعلمين</div>
+  <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
+    <select class="form-input" style="width:auto;padding:0.4rem 0.7rem" id="rq-type-filter" onchange="renderReqAnalytics()">
+      <option value="">كل الطلبات</option>
+      <option value="new_activity">نشاط جديد</option>
+      <option value="edit">تعديل</option>
+      <option value="disable">تعطيل</option>
+      <option value="leave">إجازة</option>
+      <option value="deactivate">تعطيل حساب</option>
+    </select>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="rq-total">0</div><div class="stat-label">إجمالي الطلبات</div></div>
+    <div class="stat-card"><div class="stat-num" id="rq-pending">0</div><div class="stat-label">قيد المراجعة</div></div>
+    <div class="stat-card"><div class="stat-num" id="rq-done">0</div><div class="stat-label">تم التنفيذ</div></div>
+    <div class="stat-card"><div class="stat-num" id="rq-avg">—</div><div class="stat-label">متوسط وقت التنفيذ (ساعة)</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">توزيع الطلبات بالنوع</div></div>
+    <div class="card-body"><div class="chart-bar-wrap" id="rq-chart"></div></div>
+  </div>
+</div>
+
+<!-- ══ PIPELINE ══ -->
+<div id="page-pipeline" class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+      <div><div class="page-title">📊 Pipeline — تأهيل المعلمين</div><div class="page-sub">متابعة جميع المعلمين</div></div>
+      <button class="btn btn-orange" onclick="goPage('addTeacher',null)">+ إضافة معلم</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="st-total">0</div><div class="stat-label">إجمالي</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-prog">0</div><div class="stat-label">قيد التأهيل</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-eval">0</div><div class="stat-label">انتظار تقييم</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-done">0</div><div class="stat-label">مكتمل</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-rej">0</div><div class="stat-label">مرفوض</div></div>
+  </div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<!-- ══ REQUESTS ══ -->
+<div id="page-requests" class="page">
+  <div class="page-header"><div class="page-title">📋 طلبات المعلمين</div></div>
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="btn btn-orange btn-sm" onclick="filterReqs('all',this)">الكل</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterReqs('new_activity',this)">نشاط جديد</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterReqs('edit',this)">تعديل</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterReqs('disable',this)">تعطيل</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterReqs('leave',this)">إجازة</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterReqs('deactivate',this)">تعطيل حساب</button>
+  </div>
+  <div id="reqsList"></div>
+</div>
+
+<!-- ══ VIDEOS ══ -->
+<div id="page-videos" class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+      <div><div class="page-title">🎬 إدارة الفيديوهات</div><div class="page-sub">إجباري = أونبوردينج ١ | اختياري = أونبوردينج ٢ | أمثلة التقييم = تظهر للمعلم في خطوات الإرسال</div></div>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <button id="saveVidsBtn" onclick="saveVideosConfirm()" style="background:var(--green);color:#fff;border:none;padding:0.45rem 0.9rem;border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit">💾 حفظ التغييرات</button>
+        <button class="btn btn-orange btn-sm" onclick="openAddSection()">+ إضافة قسم جديد</button>
+      </div>
+    </div>
+  </div>
+  <div id="videoSections"></div>
+</div>
+
+<!-- ══ CONTRACTS ══ -->
+<div id="page-contracts" class="page">
+  <div class="page-header"><div class="page-title">📄 العقود</div></div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">نسخ العقود</div><button class="btn btn-orange btn-sm" onclick="addContract()">+ إضافة عقد</button></div>
+    <div class="card-body" id="contractList"></div>
+  </div>
+</div>
+
+<!-- ══ MESSAGES ══ -->
+<div id="page-messages" class="page">
+  <div class="page-header"><div class="page-title">💬 الرسائل</div><div class="page-sub">تعديل الرسائل التي تُرسل للمعلمين في كل مرحلة</div></div>
+  <div id="msgList"></div>
+</div>
+
+<!-- ══ POLICIES ══ -->
+<div id="page-policies" class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+      <div><div class="page-title">📜 السياسات</div><div class="page-sub">السياسات التي تظهر للمعلم في صفحته الشخصية</div></div>
+      <button class="btn btn-orange btn-sm" onclick="addPolicy()">+ إضافة سياسة</button>
+    </div>
+  </div>
+  <div id="policiesList"></div>
+</div>
+
+<!-- ══ ADD TEACHER ══ -->
+<div id="page-addTeacher" class="page">
+  <div class="page-header"><div class="page-title">➕ إضافة معلم جديد</div></div>
+  <div class="card" style="max-width:540px">
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">الاسم الأول</label><input class="form-input" id="f-fname" placeholder="سارة"></div>
+        <div class="form-field"><label class="form-label">اسم العائلة</label><input class="form-input" id="f-lname" placeholder="أحمد"></div>
+      </div>
+      <div class="form-field"><label class="form-label">رقم الواتساب</label><input class="form-input" id="f-phone" placeholder="+966 5xx xxx xxxx" dir="ltr"></div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">الإيميل (بيانات الدخول للصفحة الموحدة)</label><input class="form-input" id="f-email" type="email" placeholder="teacher@email.com" dir="ltr"></div>
+        <div class="form-field"><label class="form-label">كلمة السر (بيانات الدخول للصفحة الموحدة)</label><input class="form-input" id="f-password" type="text" placeholder="نفس بيانات التطبيق" dir="ltr"></div>
+      </div>
+      <div class="note note-blue" style="margin-bottom:0.85rem">💡 يُفضل أن تكون نفس بيانات دخول تطبيق المعلمين لتسهيل التذكر.</div>
+      <div class="form-field"><label class="form-label">رابط الصفحة على المنصة (اختياري)</label><input class="form-input" id="f-profilelink" placeholder="gaga.com/teacher/sara-ahmed" dir="ltr"></div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">التصنيف</label>
+          <select class="form-input" id="f-class">
+            <option value="">اختر</option>
+            <option>تأسيس ومهارات</option><option>تقوية ومتابعة مدرسية</option><option>مواهب ومهارات</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">الكاتيجوري</label>
+          <select class="form-input" id="f-category">
+            <option value="">اختر</option>
+            <option>الرياضيات</option><option>العربية</option><option>الإنجليزية</option>
+            <option>العلوم والتجارب</option><option>الفنون</option><option>موسيقى</option>
+            <option>البرمجة والتقنية</option><option>المهارات الحياتية</option>
+            <option>الإسلاميات</option><option>قدرات وتحصيلي</option><option>دراسات اجتماعية</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-orange btn-full" onclick="addTeacher()">إنشاء الرابط وإرسال رسالة الترحيب</button>
+      <div id="newLinkResult" style="display:none;margin-top:1rem">
+        <div class="note note-green">✅ تم إنشاء المعلم! ابعت الرابط على الواتساب:</div>
+        <div class="link-box"><span class="link-text" id="newLinkVal"></span><button class="link-copy" onclick="copyText(document.getElementById('newLinkVal').textContent)">نسخ</button></div>
+        <div class="note note-blue" style="margin-top:0.75rem;white-space:pre-line" id="welcomePreview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BANNER ══ -->
+<div id="page-banner" class="page">
+  <div class="page-header"><div class="page-title">📢 البانر</div><div class="page-sub">رسالة مهمة تظهر لجميع المعلمين في صفحتهم</div></div>
+  <div class="card" style="max-width:560px">
+    <div class="card-head"><div class="card-title">إعدادات البانر</div></div>
+    <div class="card-body">
+      <div class="note note-blue">💡 لو فعّلت البانر سيظهر في أعلى صفحة كل معلم. لو أوقفته لن يظهر شيء.</div>
+      <div class="form-field"><label class="form-label">العنوان الرئيسي <span style="color:var(--red)">*</span></label><input class="form-input" id="b-title" placeholder="مثال: تحديث مهم في السياسات"></div>
+      <div class="form-field"><label class="form-label">نص الشرح (اختياري)</label><textarea class="form-input" id="b-text" placeholder="تفاصيل إضافية للمعلم..."></textarea></div>
+      <div class="form-field"><label class="form-label">رابط الصورة (اختياري)</label><input class="form-input" id="b-img" placeholder="https://..." dir="ltr"></div>
+      <div class="form-field"><label class="form-label">رابط إضافي (اختياري)</label><input class="form-input" id="b-link" placeholder="https://..." dir="ltr"></div>
+      <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
+        <button class="btn btn-orange" style="flex:1" onclick="saveBanner()">✅ تفعيل البانر</button>
+        <button class="btn btn-red btn-sm" onclick="clearBanner()">إيقاف البانر</button>
+      </div>
+      <div id="bannerPreview" style="display:none;margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BULK ADD ══ -->
+<div id="page-bulkAdd" class="page">
+  <div class="page-header">
+    <div class="page-title">📥 إضافة معلمين حاليين (Bulk)</div>
+    <div class="page-sub">أضف بيانات أكثر من معلم دفعة واحدة</div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">تعليمات</div></div>
+    <div class="card-body">
+      <div class="note note-blue">📋 أدخل بيانات كل معلم في سطر منفصل بهذا الترتيب:<br><strong>الاسم | الواتساب | الإيميل | كلمة السر | التصنيف | الكاتيجوري | المرحلة | رابط الصفحة</strong><br><br>مثال:<br>أ. سارة أحمد | +966500000001 | sara@email.com | pass123 | تقوية ومتابعة مدرسية | الرياضيات | 7 | gaga.com/teacher/sara-ahmed</div>
+      <div class="form-field"><label class="form-label">بيانات المعلمين</label><textarea class="form-input" id="bulk-data" style="height:200px;font-size:0.82rem" placeholder="أ. سارة أحمد | +966500000001 | sara@email.com | pass123 | تقوية ومتابعة مدرسية | الرياضيات | 7 | gaga.com/teacher/sara-ahmed"></textarea></div>
+      <button class="btn btn-orange" onclick="bulkAddTeachers()">إضافة المعلمين</button>
+      <div id="bulkResult" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORM DESIGN ══ -->
+<div id="page-formDesign" class="page">
+  <div class="page-header">
+    <div class="page-title">🛠 إدارة فورمات الطلبات</div>
+    <div class="page-sub">تحكم في حقول كل فورم يملؤه المعلم عند تقديم طلب — يمكنك إضافة نوع طلب جديد</div>
+  </div>
+
+  <!-- Form type tabs -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="btn btn-orange btn-sm" onclick="selectFormType('new_activity',this)">✨ إضافة نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('edit',this)">✏️ تعديل نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('disable',this)">⏸️ تعطيل نشاط</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('leave',this)">🌴 إجازة</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectFormType('deactivate',this)">🔒 تعطيل حساب</button>
+    <button class="btn btn-ghost btn-sm" onclick="addNewFormType()" style="border-style:dashed">+ نوع جديد</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <!-- Fields list -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title" id="formDesignTitle">حقول فورم: إضافة نشاط</div>
+        <button class="btn btn-orange btn-sm" onclick="addFormField()">+ إضافة حقل</button>
+      </div>
+      <div class="card-body" id="formFieldsList"></div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">معاينة الفورم</div></div>
+      <div class="card-body" id="formPreview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVAL QUEUE ══ -->
+<div id="page-evalQueue" class="page">
+  <div class="page-header"><div class="page-title">🔍 قائمة التقييم</div><div class="page-sub">SLA: التقييم خلال 3 أيام عمل من استلام الفيديو</div></div>
+  <div id="evalList"></div>
+</div>
+
+<!-- ══ TEACHER PORTAL ══ -->
+<div id="page-tPortal" class="page">
+  <div class="portal">
+    <div class="portal-hero">
+      <div class="portal-logo">GAGA — دورات أونلاين تفاعلية</div>
+      <div class="portal-name" id="t-portal-name">أهلاً بك 👋</div>
+      <div class="portal-stage" id="t-stage-lbl">المرحلة الحالية: —</div>
+    </div>
+    <div class="stage-overview" id="stageOverview">
+      <div class="stage-overview-title">
+        نظرة عامة على مراحل التأهيل
+        <button class="stage-hide-btn" onclick="toggleOverview()">إخفاء ✕</button>
+      </div>
+      <div class="overview-steps" id="overviewSteps"></div>
+    </div>
+    <div id="currentStageContent"></div>
+  </div>
+</div>
+
+<!-- ══ TEACHER LIBRARY ══ -->
+<div id="page-tLib" class="page">
+  <div class="portal">
+    <div class="page-header"><div class="page-title">📚 مكتبة الفيديوهات</div></div>
+    <div id="libContent"></div>
+  </div>
+</div>
+
+<!-- ══ TEACHER HOME ══ -->
+<div id="page-tHome" class="page">
+  <div class="portal">
+    <div id="t-banner-area"></div>
+    <div class="portal-hero">
+      <div class="portal-logo">GAGA</div>
+      <div class="portal-name">مرحباً بك في GAGA! 🎉</div>
+      <div class="portal-stage">حسابك مفعّل ومستعد للعمل</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-body">
+          <div style="font-size:1.3rem;margin-bottom:0.5rem">🔗</div>
+          <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">🔗 رابط صفحتي على التطبيق</div>
+          <div class="link-box"><span class="link-text" id="t-profile-link">—</span><button class="link-copy" onclick="copyText(document.getElementById('t-profile-link').textContent)">نسخ</button></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-body">
+          <div style="font-size:1.3rem;margin-bottom:0.5rem">📝</div>
+          <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">طلبات وإضافات</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.65rem">إضافة أنشطة، تعديلات، إجازات</div>
+          <button class="btn btn-orange btn-sm" onclick="goPage('tReqs',null)">فتح الطلبات</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📜 السياسات</div></div>
+      <div class="card-body" id="tHomePolicies"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🚀 فيديوهات إضافية <span class="badge badge-orange">اختياري</span></div></div>
+      <div class="card-body" id="tHomeOptional"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TEACHER REQUESTS ══ -->
+<div id="page-tReqs" class="page">
+  <div class="portal">
+    <div class="page-header"><div class="page-title">📝 طلباتي</div></div>
+    
+    <!-- Request type selection -->
+    <div id="reqTypeSelect">
+      <div class="card">
+        <div class="card-head"><div class="card-title">طلب جديد</div></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+            <button class="btn btn-ghost" style="padding:1rem;flex-direction:column;gap:0.4rem;height:auto" onclick="openReqForm('new_activity')">
+              <span style="font-size:1.5rem">✨</span>
+              <span style="font-size:0.85rem;font-weight:600">إضافة نشاط جديد</span>
+            </button>
+            <button class="btn btn-ghost" style="padding:1rem;flex-direction:column;gap:0.4rem;height:auto" onclick="openReqForm('edit')">
+              <span style="font-size:1.5rem">✏️</span>
+              <span style="font-size:0.85rem;font-weight:600">تعديل نشاط</span>
+            </button>
+            <button class="btn btn-ghost" style="padding:1rem;flex-direction:column;gap:0.4rem;height:auto" onclick="openReqForm('disable')">
+              <span style="font-size:1.5rem">⏸️</span>
+              <span style="font-size:0.85rem;font-weight:600">تعطيل نشاط</span>
+            </button>
+            <button class="btn btn-ghost" style="padding:1rem;flex-direction:column;gap:0.4rem;height:auto" onclick="openReqForm('leave')">
+              <span style="font-size:1.5rem">🌴</span>
+              <span style="font-size:0.85rem;font-weight:600">طلب إجازة</span>
+            </button>
+            <button class="btn btn-ghost" style="padding:1rem;flex-direction:column;gap:0.4rem;height:auto;grid-column:span 2" onclick="openReqForm('deactivate')">
+              <span style="font-size:1.5rem">🔒</span>
+              <span style="font-size:0.85rem;font-weight:600">تعطيل الحساب مؤقتاً</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic form -->
+    <div id="reqFormArea" style="display:none">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="reqFormTitle">طلب جديد</div>
+          <button class="btn btn-ghost btn-sm" onclick="closeReqForm()">← رجوع</button>
+        </div>
+        <div class="card-body" id="reqFormFields"></div>
+      </div>
+    </div>
+
+    <!-- Previous requests -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">طلباتي السابقة</div></div>
+      <div class="card-body" id="myReqsList"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app -->
+</div><!-- /mainApp -->
+
+<!-- TEACHER MODAL -->
+<div class="overlay" id="teacherModal">
+  <div class="modal">
+    <div class="modal-head"><span id="tModalName">تفاصيل المعلم</span><button class="modal-close" onclick="closeModal('teacherModal')">✕</button></div>
+    <div class="modal-body" id="tModalBody"></div>
+  </div>
+</div>
+
+<!-- TEACHER DATA MODAL - Step 1: Personal Info, Step 2: Subjects -->
+<div class="overlay" id="subjectModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-head">
+      <span id="dataModalTitle">📋 إرسال بياناتك — الخطوة ١ من ٢</span>
+      <button class="modal-close" onclick="closeModal('subjectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step 1: Personal Info -->
+      <div id="dataStep1">
+        <div class="note note-blue" style="margin-bottom:1rem">📌 أدخل بياناتك الشخصية — ستُستخدم لإنشاء صفحتك على المنصة.</div>
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">الاسم الأول <span style="color:var(--red)">*</span></label><input class="form-input" id="td-fname" placeholder="محمد"></div>
+          <div class="form-field"><label class="form-label">اسم العائلة <span style="color:var(--red)">*</span></label><input class="form-input" id="td-lname" placeholder="العمري"></div>
+        </div>
+        <div class="form-field"><label class="form-label">رقم الهاتف <span style="color:var(--red)">*</span></label><input class="form-input" id="td-phone" placeholder="+966 5xx xxx xxxx" dir="ltr"></div>
+        <div class="form-field"><label class="form-label">الإيميل <span style="color:var(--red)">*</span></label><input class="form-input" id="td-email" type="email" placeholder="teacher@email.com" dir="ltr"></div>
+        <div class="form-field"><label class="form-label">نبذة مختصرة <span style="color:var(--red)">*</span></label><input class="form-input" id="td-short" placeholder="معلم رياضيات خبرة 5 سنوات"></div>
+        <div class="form-field"><label class="form-label">نبذة مطولة</label><textarea class="form-input" id="td-long" style="height:90px" placeholder="اكتب عن خبرتك وأسلوبك في التدريس..."></textarea></div>
+        <div class="form-field"><label class="form-label">رابط الصورة الشخصية</label><input class="form-input" id="td-photo" placeholder="https://..." dir="ltr"><div style="font-size:0.72rem;color:var(--muted);margin-top:0.3rem">ارفع الصورة على Google Drive أو imgbb.com وانسخ الرابط المباشر</div></div>
+        <button class="btn btn-orange btn-full" onclick="goToStep2()">التالي — اختيار المواد ←</button>
+      </div>
+
+      <!-- Step 2: Subjects -->
+      <div id="dataStep2" style="display:none">
+        <button onclick="document.getElementById('dataStep1').style.display='block';document.getElementById('dataStep2').style.display='none';document.getElementById('dataModalTitle').textContent='📋 إرسال بياناتك — الخطوة ١ من ٢';" style="background:none;border:none;color:var(--muted);font-size:0.82rem;cursor:pointer;margin-bottom:1rem;font-family:inherit">→ رجوع للخطوة الأولى</button>
+        <div class="note note-orange">📌 اختر فقط المواد التي تدرّسها — هذه المعلومات ستُستخدم لإنشاء أنشطتك.</div>
+        <div style="margin-bottom:0.85rem">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem">المنهج</div>
+          <div class="subject-tags"><span class="s-tag" onclick="this.classList.toggle('sel')">المنهج السعودي</span><span class="s-tag" onclick="this.classList.toggle('sel')">المنهج الأمريكي</span><span class="s-tag" onclick="this.classList.toggle('sel')">المنهج البريطاني</span></div>
+        </div>
+        <div style="margin-bottom:0.85rem">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem">المواد <span style="color:var(--red)">*</span></div>
+          <div class="subject-tags" id="sm-subjects"></div>
+        </div>
+        <div style="margin-bottom:1rem">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem">المراحل الدراسية <span style="color:var(--red)">*</span></div>
+          <div class="subject-tags">
+            <span class="g-tag" onclick="this.classList.toggle('sel')">ما قبل المدرسة</span>
+            <span class="g-tag" onclick="this.classList.toggle('sel')">الابتدائي</span>
+            <span class="g-tag" onclick="this.classList.toggle('sel')">المتوسط</span>
+            <span class="g-tag" onclick="this.classList.toggle('sel')">الثانوي</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <div class="form-field" style="margin-top:0.75rem">
+            <label class="form-label">رابط العقد الموقع على Google Drive <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="sm-contract-link" dir="ltr" placeholder="https://drive.google.com/file/d/...">
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">ارفع العقد على Drive وضع الرابط هنا</div>
+          </div>
+          <button class="btn btn-orange" style="flex:1" onclick="saveSubjects()">حفظ وإرسال ✓</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeModal('subjectModal')">إلغاء</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD VIDEO SECTION MODAL -->
+<div class="overlay" id="sectionModal">
+  <div class="modal">
+    <div class="modal-head"><span>إضافة قسم فيديوهات جديد</span><button class="modal-close" onclick="closeModal('sectionModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-field"><label class="form-label">اسم القسم</label><input class="form-input" id="sec-name" placeholder="مثال: شرح التطبيق"></div>
+      <div class="form-field"><label class="form-label">النوع</label>
+        <select class="form-input" id="sec-type">
+          <option value="eval">أمثلة التقييم — تظهر للمعلم في خطوات إرسال الفيديو</option>
+          <option value="mandatory">إجباري — يظهر بعد القبول (أونبوردينج ١)</option>
+          <option value="optional">اختياري — يظهر في الهوم بيج (أونبوردينج ٢)</option>
+        </select>
+      </div>
+      <button class="btn btn-orange btn-full" onclick="addSection()">إضافة القسم</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- UNIVERSAL EDIT MODAL -->
+<div class="overlay" id="editModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-head"><span id="editModalTitle">تعديل</span><button class="modal-close" onclick="closeModal('editModal')">✕</button></div>
+    <div class="modal-body" id="editModalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Login tab switcher
+function switchLoginTab(tab) {
+  loginTab = tab;
+  document.getElementById('login-teacher-form').style.display = tab==='teacher'?'block':'none';
+  document.getElementById('login-admin-form').style.display = tab==='admin'?'block':'none';
+  document.getElementById('tab-teacher').className = 'login-tab'+(tab==='teacher'?' active':'');
+  document.getElementById('tab-admin').className = 'login-tab'+(tab==='admin'?' active':'');
+  document.getElementById('li-err').className = 'login-err';
+}
+
+// Attach ALL login listeners after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab switching
+  var tabTeacher = document.getElementById('tab-teacher');
+  var tabAdmin = document.getElementById('tab-admin');
+  if(tabTeacher) tabTeacher.addEventListener('click', function(){ switchLoginTab('teacher'); });
+  if(tabAdmin) tabAdmin.addEventListener('click', function(){ switchLoginTab('admin'); });
+  
+  // Login buttons
+  var liBtn = document.getElementById('li-btn');
+  var liAdminBtn = document.getElementById('li-admin-btn');
+  var liPass = document.getElementById('li-pass');
+  var liAdminPass = document.getElementById('li-admin-pass');
+  
+  if(liBtn) liBtn.addEventListener('click', function(){ doTeacherLogin(); });
+  if(liAdminBtn) liAdminBtn.addEventListener('click', function(){ doAdminLogin(); });
+  if(liPass) liPass.addEventListener('keydown', function(e){ if(e.key==='Enter') doTeacherLogin(); });
+  if(liAdminPass) liAdminPass.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdminLogin(); });
+});
+
+// ═══════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════
+let DB_URL = localStorage.getItem('gaga_db_url') || '';
+let dbConnected = false;
+
+const STAGES = [
+  '—',
+  'في انتظار الإرسال — فيديو ١',
+  'قيد المراجعة — فيديو ١',
+  'في انتظار الإرسال — فيديو ٢',
+  'قيد المراجعة — فيديو ٢',
+  'اجتماع Calendly',
+  'في انتظار البيانات',
+  'عمل الحساب',
+  'أونبوردينج ١ — بيانات المواد',
+  'أونبوردينج ٢ — مراجعة الصفحة',
+  'أونبوردينج ٣ — إضافة الأنشطة',
+  'نشط ✅'
+];
+const STAGE_ICONS = ['📥','📤','🔍','📤','🔍','📅','📋','⚙️','📚','🔗','➕','🟢'];
+const STAGE_HEAD  = ['kh0','kh1','kh2','kh1','kh2','kh3','kh4','kh4','kh3','kh3','kh3','kh6'];
+const STAGE_SHORT = ['—','انتظار فيديو ١','مراجعة فيديو ١','انتظار فيديو ٢','مراجعة فيديو ٢','اجتماع','بيانات','عمل الحساب','أونبوردينج ١','أونبوردينج ٢','أونبوردينج ٣','نشط ✅'];
+
+const ALL_SUBJECTS = ['الرياضيات','اللغة العربية','اللغة الإنجليزية','الفيزياء','الكيمياء','الأحياء','العلوم','الدراسات الإسلامية','الفقه','التوحيد','القرآن الكريم','التاريخ','الجغرافيا','الدراسات الاجتماعية','الموسيقى','الفن والتصميم','البرمجة','تكنولوجيا المعلومات','اللغة الفرنسية','اللغة الألمانية','اللغة الإيطالية','اللغة الإسبانية','الاقتصاد','المحاسبة','قدرات','تحصيلي','تأسيس رياضيات','تأسيس لغة عربية','تأسيس لغة إنجليزية','التربية البدنية','علم الأرض','الدراما','المهارات الإدارية'];
+
+let teachers = []; // بيتجاب من Google Sheet
+
+let videoSections = [
+  {id:'vs0',name:'تقييمات وأمثلة',type:'eval',videos:[
+    {id:'ve1',title:'مثال ١ — فيديو التقييم الأول',desc:'نموذج لفيديو ناجح للتقييم الأول',url:'',example1:'',example2:''},
+    {id:'ve2',title:'مثال ٢ — فيديو التقييم الأول',desc:'نموذج ثانٍ لفيديو التقييم الأول',url:'',example1:'',example2:''},
+    {id:'ve3',title:'مثال — فيديو التقييم الثاني',desc:'نموذج لفيديو ناجح للتقييم الثاني',url:'',example1:'',example2:''},
+  ]},
+  {id:'vs1',name:'جولة داخل تطبيق المعلمين',type:'mandatory',videos:[
+    {id:'vv1',title:'نظرة عامة على تطبيق المزودين',desc:'تعرف على واجهة التطبيق وأهم الأقسام',url:'',example1:'',example2:''},
+    {id:'vv2',title:'التعرف على العميل وجدولة الجلسات',desc:'كيف تقرأ بيانات العميل وتضيف مواعيد الأنشطة',url:'',example1:'',example2:''},
+    {id:'vv3',title:'جدولة الجلسات وإعادة الجدولة',desc:'خطوات جدولة وإعادة جدولة الجلسات',url:'',example1:'',example2:''},
+    {id:'vv4',title:'إضافة البثوث المباشرة',desc:'كيف تُعد وتُضيف البث المباشر للعملاء',url:'',example1:'',example2:''},
+    {id:'vv5',title:'إضافة التقارير ومحادثات العملاء',desc:'طريقة كتابة التقارير والتواصل مع العملاء',url:'',example1:'',example2:''},
+    {id:'vv6',title:'صفحة الأنشطة وتحديد مواعيد التوفر',desc:'كيف تُعد صفحتك وتحدد ساعات توفرك',url:'',example1:'',example2:''},
+  ]},
+  {id:'vs2',name:'كيف أكون معلماً متميزاً في GAGA',type:'optional',videos:[
+    {id:'vv7',title:'كيف تزيد حجوزاتك في GAGA',desc:'استراتيجيات فعالة لزيادة عدد عملائك',url:'',example1:'',example2:''},
+    {id:'vv8',title:'كيف تعمل بثاً مباشراً ناجحاً',desc:'أسرار البث المباشر الاحترافي',url:'',example1:'',example2:''},
+    {id:'vv9',title:'كيف تضيف أنشطة تزيد حجوزاتك',desc:'أنواع الأنشطة التي يبحث عنها العملاء',url:'',example1:'',example2:''},
+  ]},
+];
+
+let contracts = [
+  {id:'c1',name:'عقد 3 دولار / ساعة',url:''},
+  {id:'c2',name:'عقد 5 دولار / ساعة',url:''},
+  {id:'c3',name:'عقد 8 دولار / ساعة',url:''},
+  {id:'c4',name:'عقد دوام كامل',url:''},
+];
+
+let messages = [
+  {id:'m1',category:'onboarding',label:'رسالة الترحيب (عند الإضافة)',body:'New Onboarding Process ✨ مبروك 🎉\n\nأهلاً {name} 👋\n\nيسعدنا انضمامك لمنصة GAGA!\nللبدء في عملية التأهيل، يرجى الضغط على الرابط:\n{link}\n\nفريق GAGA 💛'},
+  {id:'m2',category:'onboarding',label:'طلب الفيديو الثاني',body:'مبارك {name} 🎉\n\nتم قبول فيديوك الأول بنجاح!\nالخطوة التالية هي إرسال الفيديو الثاني من خلال رابطك:\n{link}\n\nفريق GAGA 💛'},
+  {id:'m3',category:'onboarding',label:'رسالة القبول ورابط Calendly',body:'مبارك {name} 🎉\n\nتم قبولك بنجاح! الخطوة التالية حجز موعد مع فريقنا:\n📅 {calendly}\n\nفريق GAGA 💛'},
+  {id:'m4',category:'onboarding',label:'إشعار المراجعة',body:'شكراً {name} 👋\n\nتم استلام فيديوك وسيتم مراجعته خلال 3 أيام عمل وستصلك النتيجة.\n\nفريق GAGA 💛'},
+  {id:'r1',category:'rejection',label:'الفيديو لا يتماشى مع معايير التقييم',body:'الفيديو لا يتماشى مع معايير التقييم لدينا.'},
+  {id:'r2',category:'rejection',label:'جودة الصوت والصورة غير مناسبة',body:'جودة الصوت والصورة غير مناسبة للمستوى المطلوب.'},
+  {id:'r3',category:'rejection',label:'أسلوب الشرح لا يتوافق مع منهجية GAGA',body:'أسلوب الشرح لا يتوافق مع منهجية GAGA التعليمية.'},
+  {id:'r4',category:'rejection',label:'المحتوى العلمي يحتاج مراجعة',body:'المحتوى العلمي المقدم يحتاج إلى مراجعة وتطوير.'},
+  {id:'r5',category:'rejection',label:'مدة الفيديو غير مناسبة',body:'مدة الفيديو لا تتناسب مع المتطلبات المحددة.'},
+  {id:'m_calendly',category:'settings',label:'رابط Calendly للاجتماع',body:'https://calendly.com/your-link'},
+];
+
+let policies = [
+  {id:'p1',title:'سياسة الحضور والغياب',pdfUrl:'',body:'يلتزم المعلم بإشعار العميل مسبقاً في حال الغياب.\nفي حال الغياب دون إشعار يحق للعميل تعويض الجلسة.'},
+  {id:'p2',title:'سياسة الإجازات',pdfUrl:'',body:'يحق للمعلم أخذ إجازة بعد إشعار الفريق مسبقاً بأسبوع على الأقل.\nيلتزم المعلم بعدم قبول حجوزات خلال فترة الإجازة.'},
+  {id:'p3',title:'سياسة إجازة الحمل والوضع',pdfUrl:'',body:'يحق للمعلمة إجازة أمومة لمدة شهرين.\nيجب إشعار الفريق قبل 30 يوماً على الأقل.'},
+  {id:'p4',title:'سياسة التحويلات المالية',pdfUrl:'',body:'تُحوَّل المستحقات المالية في بداية كل شهر.\nالحد الأدنى للتحويل: 50 ريال/دولار.'},
+];
+
+let requests = [];
+
+const REQ_TYPES = {edit:{l:'تعديل نشاط',i:'✏️'},disable:{l:'تعطيل نشاط',i:'⏸️'},leave:{l:'إجازة',i:'🌴'},deactivate:{l:'تعطيل حساب',i:'🔒'},new_activity:{l:'نشاط جديد',i:'✨'}};
+// ═══════════════════════════════════════════
+// FORM BUILDER DATA
+// ═══════════════════════════════════════════
+let customForms = {
+  new_activity: {
+    label: 'إضافة نشاط جديد',
+    icon: '✨',
+    fields: [
+      {id:'f1', type:'text', label:'عنوان النشاط', required:true, placeholder:'مثال: رياضيات ابتدائي'},
+      {id:'f2', type:'textarea', label:'النبذة المبسطة', required:true, placeholder:'اكتب نبذة بسيطة تصف نشاطك...'},
+      {id:'f3', type:'textarea', label:'الأهداف التعليمية', required:false, placeholder:'اكتب الأهداف التعليمية للنشاط...'},
+      {id:'f4', type:'textarea', label:'وصف النشاط', required:false, placeholder:'وصف تفصيلي للنشاط...'},
+      {id:'f5', type:'number', label:'عدد الجلسات', required:true, placeholder:'مثال: 8'},
+      {id:'f6', type:'textarea', label:'عناوين الجلسات', required:false, placeholder:'الجلسة الأولى... الجلسة الثانية...'},
+      {id:'f7', type:'number', label:'مدة النشاط بالدقائق', required:true, placeholder:'مثال: 60'},
+      {id:'f8', type:'text', label:'الأعمار المستهدفة', required:true, placeholder:'مثال: 6-12 سنة'},
+      {id:'f9', type:'number', label:'السعر بالريال السعودي', required:true, placeholder:'مثال: 150'},
+      {id:'f10', type:'select', label:'تصنيف النشاط', required:true, options:['تأسيس ومهارات','تقوية ومتابعة مدرسية','مواهب ومهارات']},
+      {id:'f11', type:'yesno', label:'هل البرنامج يمكن أن يكون مستويات؟', required:true},
+      {id:'f12', type:'select', label:'لغة النشاط', required:true, options:['العربية','الإنجليزية','ثنائي اللغة']},
+      {id:'f13', type:'textarea', label:'ملاحظات إضافية', required:false, placeholder:'أي ملاحظات أخرى...'},
+    ]
+  },
+  edit: {
+    label: 'تعديل نشاط',
+    icon: '✏️',
+    fields: [
+      {id:'e1', type:'text', label:'اسم النشاط الحالي', required:true, placeholder:'النشاط المراد تعديله'},
+      {id:'e2', type:'textarea', label:'التعديل المطلوب', required:true, placeholder:'اشرح التعديل المطلوب بالتفصيل...'},
+    ]
+  },
+  disable: {
+    label: 'تعطيل نشاط',
+    icon: '⏸️',
+    fields: [
+      {id:'d1', type:'text', label:'اسم النشاط', required:true},
+      {id:'d2', type:'text', label:'السبب', required:true},
+      {id:'d3', type:'text', label:'المدة المتوقعة', required:false, placeholder:'مثال: أسبوعان'},
+    ]
+  },
+  leave: {
+    label: 'طلب إجازة',
+    icon: '🌴',
+    fields: [
+      {id:'l1', type:'date', label:'من تاريخ', required:true},
+      {id:'l2', type:'date', label:'حتى تاريخ', required:true},
+      {id:'l3', type:'text', label:'السبب', required:true},
+    ]
+  },
+  deactivate: {
+    label: 'تعطيل الحساب مؤقتاً',
+    icon: '🔒',
+    fields: [
+      {id:'da1', type:'text', label:'المدة المتوقعة', required:true, placeholder:'مثال: شهر واحد'},
+      {id:'da2', type:'textarea', label:'السبب', required:true},
+    ]
+  }
+};
+
+// Saved requests
+let savedRequests = [];
+
+
+let currentRole='admin', currentFilter='all', overviewHidden=false;
+let myReqs = [];
+let banner = null;
+// Simulate currently logged-in teacher (in real app, from URL param)
+let currentTeacherId = 't5'; // Onboarded teacher for demo
+
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS DB
+// ═══════════════════════════════════════════
+function openDbSettings() { goPage('dbSettings', null); }
+
+async function saveDbUrl() {
+  const url = document.getElementById('db-url').value.trim();
+  if (!url) { toast('أدخل رابط الـ Apps Script'); return; }
+  DB_URL = url;
+  localStorage.setItem('gaga_db_url', url);
+  await testDbConnection();
+}
+
+function clearDb() {
+  DB_URL = '';
+  localStorage.removeItem('gaga_db_url');
+  updateDbStatus(false);
+  document.getElementById('db-url').value = '';
+  document.getElementById('db-test-result').innerHTML = '<div class="note note-orange">تم مسح الرابط. النظام يعمل بداتا تجريبية.</div>';
+}
+
+async function testDbConnection() {
+  const el = document.getElementById('db-test-result');
+  el.innerHTML = '<div class="note note-blue"><span class="spinner"></span> جاري الاتصال...</div>';
+  updateDbStatus('loading');
+  try {
+    const res = await fetch(DB_URL + '?action=ping');
+    const data = await res.json();
+    if (data.status === 'ok') {
+      updateDbStatus(true);
+      el.innerHTML = '<div class="note note-green">✅ الاتصال ناجح! الـ Sheet جاهز.</div>';
+      await syncFromSheet();
+    } else {
+      throw new Error('invalid response');
+    }
+  } catch(e) {
+    updateDbStatus(false);
+    el.innerHTML = `<div class="note note-red">❌ فشل الاتصال.<br>تأكد من:<br>1. الرابط صحيح<br>2. Deploy تم كـ "Anyone"<br>3. الـ Sheet فيه الأعمدة الصحيحة</div>`;
+  }
+}
+
+
+function updateTeacherNav(stage) {
+  const isOnboarded = stage >= 7; // shows home/lib from stage 7+
+  const navLib = document.getElementById('nav-tLib');
+  const navHome = document.getElementById('nav-tHome');
+  const navReqs = document.getElementById('nav-tReqs');
+  const navPortal = document.getElementById('nav-tPortal');
+  if(navLib) navLib.style.display = isOnboarded ? 'flex' : 'none';
+  if(navHome) navHome.style.display = isOnboarded ? 'flex' : 'none';
+  if(navReqs) navReqs.style.display = isOnboarded ? 'flex' : 'none';
+  if(navPortal) navPortal.style.display = isOnboarded ? 'none' : 'flex';
+}
+
+function updateDbStatus(state) {
+  const el = document.getElementById('dbStatus');
+  dbConnected = state === true;
+  if (state === true) { el.className = 'db-status db-connected'; el.textContent = '✅ متصل'; }
+  else if (state === 'loading') { el.className = 'db-status db-loading'; el.textContent = '⏳ جاري...'; }
+  else { el.className = 'db-status db-disconnected'; el.textContent = '⚡ غير متصل'; }
+}
+
+async function syncFromSheet() {
+  if (!DB_URL) return;
+  try {
+    const res = await fetch(DB_URL + '?action=getAll');
+    const data = await res.json();
+    if (data.teachers && Array.isArray(data.teachers)) {
+      teachers = data.teachers.map(t => ({
+        ...t,
+        id: String(t.id),
+        stage: parseInt(t.stage) || 1,
+        subjects: typeof t.subjects === 'string' ? (t.subjects ? t.subjects.split(',') : []) : (t.subjects||[]),
+        grades: typeof t.grades === 'string' ? (t.grades ? t.grades.split(',') : []) : (t.grades||[]),
+      }));
+      renderKanban(); renderAnalytics();
+      // Update teacher nav if logged in as teacher
+      if(currentRole==='teacher' && currentTeacherId){
+        const ct=teachers.find(x=>String(x.id)===String(currentTeacherId));
+        if(ct) updateTeacherNav(parseInt(ct.stage)||1);
+      }
+      toast('تمت المزامنة من Sheet ✓');
+    }
+  } catch(e) { toast('تعذرت المزامنة'); }
+}
+
+async function pushToSheet(action, data) {
+  if (!DB_URL) return;
+  try {
+    const payload = {action, ...data};
+    // Build GET URL with individual params (most reliable CORS-free method)
+    const params = new URLSearchParams();
+    params.set('action', action);
+    Object.keys(payload).forEach(k => {
+      if (k !== 'action') params.set(k, String(payload[k]));
+    });
+    const url = DB_URL + '?' + params.toString();
+    if (url.length < 8000) {
+      await fetch(url, {mode:'no-cors'});
+    } else {
+      // Fallback for large data: use hidden form trick
+      submitFormToSheet(payload);
+    }
+  } catch(e) { console.warn('Sheet sync failed:', e); }
+}
+
+function submitFormToSheet(data) {
+  // Creates a hidden form and submits it - bypasses CORS entirely
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = DB_URL;
+  form.target = 'hidden_iframe';
+  form.style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'payload';
+  input.value = JSON.stringify(data);
+  form.appendChild(input);
+  // Create hidden iframe
+  let iframe = document.getElementById('hidden_iframe');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.id = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => form.remove(), 1000);
+}
+
+// ═══════════════════════════════════════════
+// SYNC REQUESTS FROM SHEET
+// ═══════════════════════════════════════════
+async function syncRequests() {
+  if(!DB_URL) return;
+  try {
+    const res = await fetch(DB_URL+'?action=getRequests');
+    const data = await res.json();
+    if(data.requests && Array.isArray(data.requests)) {
+      requests = data.requests;
+      renderRequests();
+    }
+  } catch(e) { console.warn('Requests sync failed:', e); }
+}
+
+async function markDoneAndSync(id) {
+  const r = requests.find(x=>x.id===id);
+  if(r) {
+    r.status='done';
+    renderRequests();
+    toast('تم ✓');
+    await pushToSheet('updateRequest', {id, status:'done'});
+  }
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if (pg) pg.classList.add('active');
+  if (el) el.classList.add('active');
+  const renders = {
+    pipeline:renderKanban, analytics:renderAnalytics, requests:async()=>{await loadRequestsFromSheet();renderRequests();},
+    videos:renderVideos, contracts:renderContracts, messages:renderMessages,
+    policies:renderPolicies, banner:renderBannerPage, bulkAdd:()=>{},
+    evalQueue:renderEvalQueue, tPortal:renderTeacherPortal,
+    tLib:renderLib, tHome:renderHome, tReqs:renderMyReqs, dbSettings:()=>{}
+  };
+  if (renders[id]) renders[id]();
+}
+
+function switchRole(role) {
+  currentRole = role;
+  document.getElementById('roleLabel').textContent = role==='admin'?'Admin':role==='eval'?'فريق التقييم':'المعلم';
+  ['sbAdmin','sbEval','sbTeacher'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById({admin:'sbAdmin',eval:'sbEval',teacher:'sbTeacher'}[role]).style.display='block';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if (role==='admin') goPage('analytics', null);
+  if (role==='eval') { document.getElementById('page-evalQueue').classList.add('active'); renderEvalQueue(); }
+  if (role==='teacher') { document.getElementById('page-tPortal').classList.add('active'); renderTeacherPortal(); }
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function daysSince(dt){ return Math.floor((Date.now()-new Date(dt))/(864e5)); }
+function fmtDt(dt){ if(!dt)return '—'; const _d2=new Date(dt); if(isNaN(_d2.getTime()))return '—'; return _d2.toLocaleString('ar-EG',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(dt){ if(!dt)return '—'; const _d=new Date(dt); if(isNaN(_d.getTime()))return '—'; return _d.toLocaleDateString('ar-EG',{day:'numeric',month:'short'}); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function copyText(t){ navigator.clipboard?.writeText(t); toast('تم النسخ ✓'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function ytEmbed(url){ if(!url)return null; const m=url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/); return m?`https://www.youtube.com/embed/${m[1]}`:null; }
+function genId(){ return 't'+Date.now()+Math.floor(Math.random()*1000); }
+function getTeacherLink(id){ return window.location.origin+window.location.pathname+'?teacher='+id; }
+
+// ═══════════════════════════════════════════
+// KANBAN
+// ═══════════════════════════════════════════
+function renderKanban() {
+  const container = document.getElementById('kanban');
+  container.innerHTML = '';
+  let total=0,prog=0,evalW=0,done=0,rej=0;
+  const cols = Array.from({length:12},()=>[]); const rejCol=[];
+  teachers.forEach(t=>{
+    total++;
+    if(t.stage===7) done++;
+    else if(t.stage===-1) rej++;
+    else prog++;
+    if(t.stage===2||t.stage===4) evalW++;
+    if(t.stage===-1) rejCol.push(t); else cols[t.stage]?.push(t);
+  });
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-prog').textContent=prog;
+  document.getElementById('st-eval').textContent=evalW;
+  document.getElementById('st-done').textContent=done;
+  document.getElementById('st-rej').textContent=rej;
+
+  cols.forEach((list,si)=>{
+    const col=document.createElement('div'); col.className='kol';
+    col.innerHTML=`<div class="kol-head ${STAGE_HEAD[si]||'kh0'}">${STAGE_ICONS[si]||''} ${STAGE_SHORT[si]||''}<span class="kol-cnt">${list.length}</span></div><div class="kol-body"></div>`;
+    container.appendChild(col);
+    const body=col.querySelector('.kol-body');
+    body.dataset.stage=si;
+    body.addEventListener('dragover', e=>{ e.preventDefault(); body.style.background='var(--orange-xlight)'; });
+    body.addEventListener('dragleave', e=>{ body.style.background=''; });
+    body.addEventListener('drop', e=>{
+      e.preventDefault(); body.style.background='';
+      const tid=e.dataTransfer.getData('teacherId');
+      const t=teachers.find(x=>String(x.id)===String(tid));
+      if(t && parseInt(body.dataset.stage)!==t.stage){
+        t.stage=parseInt(body.dataset.stage);
+        t.stageAt=new Date().toISOString();
+        renderKanban();
+        pushToSheet('update',{id:t.id,stage:t.stage,stageAt:t.stageAt});
+        toast('تم نقل المعلم ✓');
+      }
+    });
+    if(!list.length){body.innerHTML='<div style="font-size:0.72rem;color:#ccc;text-align:center;padding:0.5rem">فارغ</div>';return;}
+    list.forEach(t=>{
+      const dStage=daysSince(t.stageAt); const dTotal=daysSince(t.addedAt);
+      const slaWarn=(si===2||si===4)&&dStage>=3?`<div class="sla-warn">⚠️ تجاوز SLA (${dStage} أيام)</div>`:'';
+      const timeInfo=si===11?`نشط منذ ${fmtDate(t.stageAt)} | ${dTotal} يوم إجمالي`
+        :`في المرحلة: ${dStage===0?'اليوم':dStage+' يوم'} | الإجمالي: ${dTotal} يوم`;
+      const card=document.createElement('div'); card.className='tcard';
+      card.draggable=true;
+      card.dataset.id=t.id;
+      card.addEventListener('dragstart', e=>{ e.dataTransfer.setData('teacherId', t.id); card.style.opacity='0.5'; });
+      card.addEventListener('dragend', e=>{ card.style.opacity='1'; });
+      card.innerHTML=`<div class="tcard-name">${t.name}</div><div class="tcard-sub">${t.category||'—'}</div><div class="tcard-time">${timeInfo}</div>${slaWarn}<div class="tcard-actions"><button class="tc-btn tc-view" onclick="openTeacherModal('${t.id}')">تفاصيل</button>${si===2||si===4?`<button class="tc-btn tc-eval" onclick="openTeacherModal('${t.id}')">تقييم</button>`:''} ${si<11?`<button class="tc-btn tc-next" onclick="advance('${t.id}')">التالية ►</button>`:'<span style="font-size:0.68rem;color:var(--green);font-weight:700">🟢 نشط</span>'} <button class="tc-btn" style="background:var(--blue-light);color:var(--blue)" onclick="goBack('${t.id}');renderKanban()">◄</button></div>`;
+      body.appendChild(card);
+    });
+  });
+
+  const rc=document.createElement('div'); rc.className='kol';
+  rc.innerHTML=`<div class="kol-head kh-rej">❌ مرفوض<span class="kol-cnt">${rejCol.length}</span></div><div class="kol-body"></div>`;
+  container.appendChild(rc);
+  const rb=rc.querySelector('.kol-body');
+  if(!rejCol.length) rb.innerHTML='<div style="font-size:0.72rem;color:#ccc;text-align:center;padding:0.5rem">لا يوجد</div>';
+  rejCol.forEach(t=>{
+    const card=document.createElement('div'); card.className='tcard';
+    card.innerHTML=`<div class="tcard-name">${t.name}</div><div class="tcard-sub">${t.category||'—'}</div><div class="tcard-actions"><button class="tc-btn tc-view" onclick="openTeacherModal('${t.id}')">تفاصيل</button><button class="tc-btn" style="background:var(--green-light);color:var(--green)" onclick="resetTeacher('${t.id}')">🔄 Reset</button></div>`;
+    rb.appendChild(card);
+  });
+}
+
+function advance(id) {
+  const t=teachers.find(x=>String(x.id)===String(id));
+  if(t&&t.stage<11){ t.stage++; t.stageAt=new Date().toISOString(); t.stageNotes=''; renderKanban(); toast('تم النقل للمرحلة التالية ✓'); pushToSheet('update',{id:t.id,stage:t.stage,stageAt:t.stageAt}); }
+}
+function saveAccountData(id) {
+  const t = teachers.find(x=>String(x.id)===String(id));
+  if(!t){ toast('معلم غير موجود'); return; }
+  
+  const profileLinkEl = document.getElementById('modal-profilelink');
+  const appEmailEl    = document.getElementById('modal-appemail');
+  const appPasswordEl = document.getElementById('modal-apppassword');
+  
+  if(!profileLinkEl||!appEmailEl||!appPasswordEl){ toast('خطأ: الحقول غير موجودة'); return; }
+  
+  const profileLink  = profileLinkEl.value.trim();
+  const appEmail     = appEmailEl.value.trim();
+  const appPassword  = appPasswordEl.value.trim();
+  
+  if(!profileLink){ toast('أدخل رابط صفحة المعلم'); return; }
+  if(!appEmail)   { toast('أدخل الإيميل'); return; }
+  if(!appPassword){ toast('أدخل كلمة السر'); return; }
+  
+  // Normalize profile link
+  const cleanLink = profileLink.replace(/^https?:\/\//, '');
+  
+  t.profileLink  = cleanLink;
+  t.appEmail     = appEmail;
+  t.appPassword  = appPassword;
+  t.stage        = 8;
+  t.stageAt      = new Date().toISOString();
+  
+  pushToSheet('update', {
+    id: t.id,
+    stage: t.stage,
+    stageAt: t.stageAt,
+    profileLink: cleanLink,
+    appEmail,
+    appPassword
+  });
+  
+  closeModal('teacherModal');
+  renderKanban();
+  toast('✅ تم حفظ البيانات وتحريك المعلم لأونبوردينج ١');
+}
+
+function confirmFullAccept(id) {
+  const t=teachers.find(x=>String(x.id)===String(id));if(!t)return;
+  openModal('تأكيد القبول الكلي','<div class="note note-orange">⚠️ هل أنت متأكد من قبول <strong>'+t.name+'</strong> مباشرة لمرحلة نشط؟</div>',()=>{
+    t.stage=7; t.stageAt=new Date().toISOString(); renderKanban(); renderEvalQueue(); toast('تم القبول الكلي المباشر 🎉'); pushToSheet('update',{id:t.id,stage:7,stageAt:t.stageAt});
+  },'قبول كلي','btn-green');
+}
+
+function goBack(id) {
+  const t = teachers.find(x=>String(x.id)===String(id));
+  if(t && t.stage > 1) {
+    t.stage--;
+    t.stageAt = new Date().toISOString();
+    renderKanban();
+    toast('تم الرجوع للمرحلة السابقة');
+    pushToSheet('update', {id:t.id, stage:t.stage, stageAt:t.stageAt});
+  }
+}
+
+function resetTeacher(id) {
+  const t=teachers.find(x=>String(x.id)===String(id));
+  if(t){ t.stage=1; t.stageAt=new Date().toISOString(); t.vid1=''; t.vid2=''; t.rejNote=''; renderKanban(); toast('تم Reset ✓'); pushToSheet('update',{id:t.id,stage:1,stageAt:t.stageAt,vid1:'',vid2:'',rejNote:''}); }
+}
+function doRejectFinal(id, note) {
+  const t=teachers.find(x=>String(x.id)===String(id));
+  if(t){ t.stage=-1; t.stageAt=new Date().toISOString(); t.rejNote=note||'لم يستوف معايير القبول'; renderKanban(); closeModal('teacherModal'); toast('تم الرفض النهائي'); pushToSheet('update',{id:t.id,stage:-1,stageAt:t.stageAt,rejNote:t.rejNote}); }
+}
+
+function openTeacherModal(id) {
+  const t=teachers.find(x=>String(x.id)===String(id));if(!t)return;
+  const link=getTeacherLink(t.id);
+  const isEval=t.stage===2||t.stage===4;
+  const isRej=t.stage===-1;
+  const dStage=daysSince(t.stageAt); const dTotal=daysSince(t.addedAt);
+  document.getElementById('tModalName').textContent=t.name;
+  document.getElementById('tModalBody').innerHTML=`
+    <div class="m-row"><span class="m-label">المرحلة</span><span class="m-val"><span class="badge badge-${isRej?'red':t.stage===11?'green':'orange'}">${isRej?'❌ مرفوض':(STAGE_ICONS[t.stage]||'')+' '+(STAGE_SHORT[t.stage]||'—')}</span></span></div>
+    <div class="m-row"><span class="m-label">التصنيف</span><span class="m-val">${t.classification||'—'}</span></div>
+    <div class="m-row"><span class="m-label">الكاتيجوري</span><span class="m-val">${t.category||'—'}</span></div>
+    <div class="m-row"><span class="m-label">المواد</span><span class="m-val">${(t.subjects||[]).join('، ')||'—'}</span></div>
+    <div class="m-row"><span class="m-label">المراحل</span><span class="m-val">${(t.grades||[]).join('، ')||'—'}</span></div>
+    <div class="m-row"><span class="m-label">الواتساب</span><span class="m-val" dir="ltr">${t.phone||'—'}</span></div>
+    ${t.email?`<div class="m-row"><span class="m-label">الإيميل</span><span class="m-val" dir="ltr">${t.email}</span></div>`:''}
+    ${t.password?`<div class="m-row"><span class="m-label">كلمة السر</span><span class="m-val" dir="ltr">${t.password}</span></div>`:''}
+    ${t.profileLink?`<div class="m-row"><span class="m-label">رابط الصفحة</span><span class="m-val" dir="ltr"><a href="https://${t.profileLink}" target="_blank" style="color:var(--blue)">${t.profileLink}</a></span></div>`:''}
+    <div class="m-row"><span class="m-label">تاريخ الإضافة</span><span class="m-val">${fmtDt(t.addedAt)}</span></div>
+    <div class="m-row"><span class="m-label">في المرحلة منذ</span><span class="m-val">${dStage===0?'اليوم':dStage+' يوم'}</span></div>
+    <div class="m-row"><span class="m-label">إجمالي أيام الفانل</span><span class="m-val">${dTotal} يوم</span></div>
+    ${t.vid1?`<div class="m-row"><span class="m-label">فيديو ١</span><span class="m-val"><a href="${t.vid1}" target="_blank" style="color:var(--blue);font-size:0.82rem">${t.vid1}</a></span></div>`:''}
+    ${t.vid2?`<div class="m-row"><span class="m-label">فيديو ٢</span><span class="m-val"><a href="${t.vid2}" target="_blank" style="color:var(--blue);font-size:0.82rem">${t.vid2}</a></span></div>`:''}
+    ${isRej?`<div class="m-row"><span class="m-label">سبب الرفض</span><span class="m-val" style="color:var(--red)">${t.rejNote||'—'}</span></div>`:''}
+    <div class="divider"></div>
+    <div style="font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:0.4rem">🔗 رابط صفحة المعلم على التطبيق</div>
+    <div class="link-box" style="margin-bottom:1rem"><span class="link-text">${link}</span><button class="link-copy" onclick="copyText('${link}')">نسخ</button></div>
+    ${isEval?`
+    <div class="note note-blue">⏱ SLA: التقييم خلال 3 أيام عمل | مضى ${dStage} يوم ${dStage>=3?'⚠️':''}</div>
+    <div class="form-field" style="margin-top:0.75rem"><label class="form-label">ملاحظات في حال طلب إعادة الفيديو <span style="color:var(--muted);font-size:0.72rem">(اختياري)</span></label><textarea class="form-input" id="eval-notes-m" style="height:65px" placeholder="اكتب ملاحظات واضحة..."></textarea></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+      <button class="btn btn-green" style="flex:1" onclick="advance('${t.id}');closeModal('teacherModal');toast('تم القبول ✓')">✅ قبول</button>
+      <button class="btn btn-red btn-sm" onclick="redoFromModal('${t.id}')">🔄 إعادة</button>
+      <button class="btn btn-red btn-sm" onclick="doRejectFinal('${t.id}',null)">❌ رفض نهائي</button>
+    </div>`
+    :isRej?`<button class="btn btn-green btn-sm" onclick="resetTeacher('${t.id}');closeModal('teacherModal')">🔄 Reset وإعادة التقديم</button>`
+    :`<div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      ${t.stage<11?`<button class="btn btn-orange" style="flex:1" onclick="advance('${t.id}');closeModal('teacherModal')">نقل للتالية ►</button>`:''}
+      ${t.stage===6?`<div style="width:100%;margin-top:0.75rem">
+        <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.4rem">📋 بيانات المعلم للمراجعة:</div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;font-size:0.82rem">
+          <div><strong>الاسم:</strong> ${t.teacherName||t.name||'—'}</div>
+          <div><strong>الهاتف:</strong> ${t.teacherPhone||t.phone||'—'}</div>
+          <div><strong>الإيميل:</strong> ${t.teacherEmail||t.email||'—'}</div>
+          <div><strong>النبذة المختصرة:</strong> ${t.shortBio||'—'}</div>
+          <div><strong>المواد:</strong> ${(t.subjects||[]).join('، ')||'—'}</div>
+          <div><strong>المراحل:</strong> ${(t.grades||[]).join('، ')||'—'}</div>
+          <div><strong>المنهج:</strong> ${t.curriculum||'—'}</div>
+        </div>
+        <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.4rem">اختر العقد وابعته للمعلم:</div>
+        <div id="contractBtns-${t.id}">${contracts.map(c=>`<button class="btn btn-ghost btn-sm" style="margin:0.2rem" id="cb-${t.id}-${c.id}" onclick="selectContract('${t.id}','${c.id}',this)">${c.name}${c.pdfUrl?' 📄':''}</button>`).join('')}</div>
+      </div>`:''}
+      ${t.stage===7?`<div style="width:100%;margin-top:0.75rem;background:var(--blue-light);border:1px solid var(--border);border-radius:8px;padding:0.85rem">
+        <div style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;color:var(--blue)">⚙️ بيانات الدخول لتطبيق المعلمين</div>
+        <div style="margin-bottom:0.5rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">رابط صفحة المعلم على التطبيق</label>
+          <input class="form-input" id="modal-profilelink" placeholder="https://go.gaga-app.com/..." style="margin-bottom:0.4rem" dir="ltr" value="${t.profileLink?(t.profileLink.startsWith('http')?t.profileLink:'https://'+t.profileLink):''}"></div>
+        <div style="margin-bottom:0.5rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">الإيميل — بيانات الدخول لتطبيق المعلمين</label>
+          <input class="form-input" id="modal-appemail" placeholder="teacher@email.com" dir="ltr" value="${t.appEmail||t.email||''}"></div>
+        <div style="margin-bottom:0.75rem"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.25rem">كلمة السر — بيانات الدخول لتطبيق المعلمين</label>
+          <input class="form-input" id="modal-apppassword" placeholder="كلمة السر" dir="ltr" value="${t.appPassword||''}"></div>
+        <button class="btn btn-orange btn-full" onclick="saveAccountData('${t.id}')">✅ حفظ البيانات وتفعيل الحساب</button>
+      </div>`:''}
+      <button class="btn btn-red btn-sm" onclick="doRejectFinal('${t.id}',null)">❌ رفض نهائي</button>
+      ${t.stage>1?`<button class="btn btn-ghost btn-sm" onclick="goBack('${t.id}');closeModal('teacherModal')">◄ رجوع مرحلة</button>`:''}
+    </div>`}
+  `;
+  document.getElementById('teacherModal').classList.add('open');
+}
+
+function redoFromModal(id) {
+  const note = document.getElementById('eval-notes-m')?.value.trim()||'';
+  if(!note){ toast('⚠️ اكتب ملاحظة قبل طلب الإعادة'); return; }
+  toast('تم إرسال طلب الإعادة ✓');
+  closeModal('teacherModal');
+}
+
+// ═══════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════
+function renderAnalytics() {
+  const sf=document.getElementById('f-stage').value;
+  const cf=document.getElementById('f-cat').value;
+  const period=document.getElementById('f-period').value;
+  let filtered=teachers.filter(t=>t.stage!==-1);
+  if(sf!=='') filtered=filtered.filter(t=>t.stage===parseInt(sf));
+  if(cf!=='') filtered=filtered.filter(t=>t.classification===cf);
+  if(period!=='all'){ const cutoff=Date.now()-parseInt(period)*864e5; filtered=filtered.filter(t=>new Date(t.addedAt).getTime()>=cutoff); }
+
+  const total=filtered.length, done=filtered.filter(t=>t.stage===11).length;
+  const rej=teachers.filter(t=>t.stage===-1).length;
+  const avgDays=total?Math.round(filtered.reduce((s,t)=>s+daysSince(t.addedAt),0)/total):0;
+  document.getElementById('a-total').textContent=total;
+  document.getElementById('a-done').textContent=done;
+  document.getElementById('a-avg').textContent=avgDays;
+  document.getElementById('a-rej').textContent=rej;
+
+  const catC={}, stgC={}, subC={}, daysC={}, daysN={};
+  filtered.forEach(t=>{ const c=t.category||'غير محدد'; catC[c]=(catC[c]||0)+1; });
+  filtered.forEach(t=>{ const s=STAGE_SHORT[t.stage]; if(s) stgC[s]=(stgC[s]||0)+1; });
+  filtered.forEach(t=>{ (t.subjects||[]).forEach(s=>{ subC[s]=(subC[s]||0)+1; }); });
+  teachers.filter(t=>t.stage>0&&t.stage<11).forEach(t=>{ const s=STAGE_SHORT[t.stage]; const d=daysSince(t.stageAt); if(s){daysC[s]=(daysC[s]||0)+d; daysN[s]=(daysN[s]||0)+1;} });
+  const avgStg={};Object.keys(daysC).forEach(k=>{avgStg[k]=Math.round(daysC[k]/daysN[k]);});
+
+  barChart('ch-cat',catC,total);
+  barChart('ch-stage',stgC,total);
+  barChart('ch-days',avgStg,Math.max(...Object.values(avgStg).concat([1])),true);
+  const top8=Object.fromEntries(Object.entries(subC).sort((a,b)=>b[1]-a[1]).slice(0,8));
+  barChart('ch-subj',top8,total);
+
+  document.getElementById('a-table').innerHTML=`
+    <thead><tr><th>المعلم</th><th>الكاتيجوري</th><th>المواد</th><th>المرحلة</th><th>أيام في المرحلة الحالية</th><th>أيام من بداية الانضمام</th></tr></thead>
+    <tbody>${filtered.map(t=>`<tr><td><strong>${t.name}</strong></td><td>${t.category||'—'}</td><td>${(t.subjects||[]).slice(0,2).join('، ')||'—'}</td><td><span class="badge badge-${t.stage===11?'green':'orange'}">${STAGE_SHORT[t.stage]||'—'}</span></td><td>${daysSince(t.stageAt)} يوم</td><td>${daysSince(t.addedAt)} يوم</td></tr>`).join('')}</tbody>`;
+}
+
+function barChart(el,data,max,isVal=false) {
+  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const m=Math.max(...sorted.map(x=>x[1]),1);
+  document.getElementById(el).innerHTML=sorted.map(([l,v])=>{
+    const pct=Math.round(v/m*100);
+    const show=isVal?v+'d':`${v}`;
+    return `<div class="chart-bar-row"><div class="chart-bar-label">${l}</div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${pct}%"><span class="chart-bar-val">${show}</span></div></div><span class="chart-bar-count">${v}</span></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// REQUESTS
+// ═══════════════════════════════════════════
+async function loadRequestsFromSheet() {
+  if(!DB_URL) return;
+  try {
+    const res = await fetch(DB_URL+'?action=getRequests');
+    const data = await res.json();
+    if(data.requests && Array.isArray(data.requests)) {
+      // Merge Sheet requests with local (avoid duplicates)
+      data.requests.forEach(r => {
+        if(!requests.find(x=>String(x.id)===String(r.id))) {
+          requests.push(r);
+        }
+      });
+    }
+  } catch(e) { console.log('Could not load requests from Sheet:', e); }
+}
+
+function renderRequests() {
+  const pending=requests.filter(r=>r.status==='pending').length;
+  document.getElementById('req-badge').textContent=pending;
+  const filtered=currentFilter==='all'?requests:requests.filter(r=>r.type===currentFilter);
+  const el=document.getElementById('reqsList');
+  if(!filtered.length){el.innerHTML='<div class="empty">لا توجد طلبات</div>';return;}
+  el.innerHTML=filtered.map(r=>`
+    <div class="req-card" style="${r.status==='done'?'opacity:0.65':''}">
+      <div class="req-header">
+        <div class="req-icon">${REQ_TYPES[r.type]?.i||'📝'}</div>
+        <div class="req-info">
+          <div class="req-teacher">${r.teacher} <span class="badge badge-${r.type==='new_activity'?'blue':'gray'}">${REQ_TYPES[r.type]?.l||r.type}</span></div>
+          <div class="req-date">${fmtDt(r.date)}</div>
+        </div>
+      </div>
+      ${r.detail?`<div style="margin-top:0.5rem;padding:0.6rem;background:var(--off);border-radius:6px;font-size:0.8rem;color:var(--muted);line-height:1.7;white-space:pre-line;max-height:150px;overflow-y:auto">${r.detail}</div>`:''}
+      ${r.status==='pending'?`<div class="req-actions"><button class="btn btn-green btn-sm" onclick="markDone('${r.id}')">✅ تم التنفيذ</button></div>`:`<div style="margin-top:0.5rem"><span class="badge badge-green">✅ تم التنفيذ</span></div>`}
+    </div>
+  `).join('');
+}
+function filterReqs(t,el){ currentFilter=t; document.querySelectorAll('#page-requests .btn').forEach(b=>b.className='btn btn-ghost btn-sm'); el.className='btn btn-orange btn-sm'; renderRequests(); }
+function markDone(id){ markDoneAndSync(id); }
+
+// ═══════════════════════════════════════════
+// VIDEOS
+// ═══════════════════════════════════════════
+function renderVideos() {
+  document.getElementById('videoSections').innerHTML=videoSections.map(sec=>{
+    const badgeClass = sec.type==='eval'?'badge-purple':sec.type==='mandatory'?'badge-orange':'badge-blue';
+    const badgeLabel = sec.type==='eval'?'أمثلة التقييم':sec.type==='mandatory'?'إجباري':'اختياري';
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${sec.name} <span class="badge ${badgeClass}">${badgeLabel}</span></div></div>
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="editSectionName('${sec.id}')">تعديل العنوان</button>
+          <button class="btn btn-orange btn-sm" onclick="addVideo('${sec.id}')">+ إضافة فيديو</button>
+        </div>
+      </div>
+      <div class="card-body">
+        ${sec.videos.map(v=>`
+          <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.6rem">
+            <div style="display:flex;align-items:flex-start;gap:0.75rem">
+              <div style="flex:1">
+                <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.2rem">${v.title}</div>
+                <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.35rem">${v.desc||'لا يوجد وصف'}</div>
+                <div style="font-size:0.75rem;color:var(--blue);direction:ltr;text-align:left">${v.url||'لم يُضف رابط بعد'}</div>
+                ${v.example1||v.example2?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-top:0.5rem">
+                  ${v.example1?`<div style="background:#111;border-radius:6px;height:80px;overflow:hidden">${ytEmbed(v.example1)?`<iframe src="${ytEmbed(v.example1)}" width="100%" height="100%" style="border:none" allowfullscreen></iframe>`:'<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555">مثال ١</div>'}</div>`:''}
+                  ${v.example2?`<div style="background:#111;border-radius:6px;height:80px;overflow:hidden">${ytEmbed(v.example2)?`<iframe src="${ytEmbed(v.example2)}" width="100%" height="100%" style="border:none" allowfullscreen></iframe>`:'<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555">مثال ٢</div>'}</div>`:''}
+                </div>`:''}
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="editVideo('${sec.id}','${v.id}')">تعديل</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `}).join('');
+}
+
+function saveVideosConfirm() {
+  saveSettings();
+  const btn = document.getElementById('saveVidsBtn');
+  btn.textContent = '✅ تم الحفظ!';
+  btn.style.background = 'var(--green)';
+  btn.style.color = '#fff';
+  btn.style.border = 'none';
+  setTimeout(()=>{
+    btn.textContent = '💾 حفظ التغييرات';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.border = '';
+  }, 2500);
+  toast('تم حفظ إعدادات الفيديوهات ✓');
+}
+
+function openAddSection(){ document.getElementById('sectionModal').classList.add('open'); }
+function editSectionName(secId){ const sec=videoSections.find(s=>s.id===secId);if(!sec)return; showEditModal('تعديل اسم القسم',[{key:'name',label:'اسم القسم',value:sec.name,required:true}],v=>{sec.name=v.name;renderVideos();saveSettings();toast('تم التعديل ✓');}); }
+function addSection(){ const name=document.getElementById('sec-name').value.trim(); const type=document.getElementById('sec-type').value; if(!name){toast('أدخل اسم القسم');return;} videoSections.push({id:'vs'+Date.now(),name,type,videos:[]}); closeModal('sectionModal');renderVideos();toast('تم الإضافة ✓'); }
+function addVideo(secId){ 
+  const sec=videoSections.find(s=>s.id===secId);
+  if(!sec) return;
+  showEditModal('إضافة فيديو جديد',[
+    {key:'title',label:'عنوان الفيديو',required:true},
+    {key:'desc',label:'وصف مختصر (اختياري)'},
+    {key:'url',label:'رابط يوتيوب',dir:'ltr',placeholder:'https://youtube.com/watch?v=...'}
+  ],v=>{ sec.videos.push({id:'vv'+Date.now(),title:v.title,desc:v.desc,url:v.url,example1:'',example2:''}); renderVideos();saveSettings();toast('تم الإضافة ✓');});
+}
+function editVideo(secId,vidId){ 
+  const sec=videoSections.find(s=>s.id===secId); 
+  const v=sec?.videos.find(x=>x.id===vidId);if(!v)return;
+  showEditModal('تعديل الفيديو',[
+    {key:'title',label:'عنوان الفيديو',value:v.title,required:true},
+    {key:'desc',label:'وصف مختصر (اختياري)',value:v.desc||''},
+    {key:'url',label:'رابط يوتيوب',value:v.url,dir:'ltr',placeholder:'https://youtube.com/watch?v=...'}
+  ],vs=>{ v.title=vs.title||v.title; v.desc=vs.desc; v.url=vs.url; v.example1=''; v.example2=''; renderVideos();saveSettings();toast('تم الحفظ ✓');});
+}
+
+// ═══════════════════════════════════════════
+// CONTRACTS
+// ═══════════════════════════════════════════
+function renderContracts(){
+  document.getElementById('contractList').innerHTML=contracts.map(c=>`
+    <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.6rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+        <span style="font-size:0.88rem;font-weight:600">📄 ${c.name}</span>
+        <div style="display:flex;gap:0.4rem">
+          ${c.pdfUrl?`<a href="${c.pdfUrl}" target="_blank" class="btn btn-ghost btn-sm">📄 فتح</a>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="editContractPdf('${c.id}')">تعديل PDF</button>
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:${c.pdfUrl?'var(--green)':'var(--red)'}">
+        ${c.pdfUrl?'✅ يوجد PDF':'❌ لا يوجد PDF — أضف رابطاً'}
+      </div>
+    </div>
+  `).join('');
+}
+function editContractPdf(id){
+  const c=contracts.find(x=>x.id===id);if(!c)return;
+  openModal('تعديل رابط PDF','<div class="form-field"><label class="form-label">رابط PDF</label><input class="form-input" id="modal-input-1" dir="ltr" placeholder="https://drive.google.com/..." value="'+(c.pdfUrl||'')+'"></div>',
+  ()=>{c.pdfUrl=document.getElementById('modal-input-1').value.trim();renderContracts();saveSettings();toast('تم حفظ رابط PDF ✓');});
+}
+function addContract(){ showEditModal('إضافة عقد جديد',[{key:'name',label:'اسم العقد',required:true,placeholder:'مثال: عقد 3 دولار / ساعة'}],v=>{ contracts.push({id:'c'+Date.now(),name:v.name,url:''}); renderContracts();saveSettings();toast('تم الإضافة ✓');}); }
+function editContract(id){ const c=contracts.find(x=>String(x.id)===String(id));if(!c)return; showEditModal('تعديل العقد',[{key:'name',label:'اسم العقد',value:c.name,required:true}],v=>{ c.name=v.name; renderContracts();saveSettings();toast('تم التعديل ✓');}); }
+function deleteContract(id){ openModal('حذف العقد','<div class="note note-red">⚠️ هل تريد حذف هذا العقد؟</div>',()=>{contracts=contracts.filter(x=>x.id!==id);renderContracts();saveSettings();toast('تم الحذف');},'حذف','btn-red'); }
+
+// ═══════════════════════════════════════════
+// MESSAGES
+// ═══════════════════════════════════════════
+function renderMessages() {
+  const onboarding=messages.filter(m=>m.category==='onboarding');
+  const rejection=messages.filter(m=>m.category==='rejection');
+  const settings_msgs=messages.filter(m=>m.category==='settings');
+  const secHTML=(title,list,cat)=>`
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head"><div class="card-title">${title}</div><button class="btn btn-orange btn-sm" onclick="addMsg('${cat}')">+ إضافة</button></div>
+      <div class="card-body">
+        ${list.map(m=>`
+          <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.6rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+              <span style="font-size:0.85rem;font-weight:600">${m.label}</span>
+              <div style="display:flex;gap:0.3rem"><button class="btn btn-ghost btn-sm" onclick="editMsg('${m.id}')">تعديل</button><button class="btn btn-red btn-sm" onclick="deleteMsg('${m.id}')">حذف</button></div>
+            </div>
+            <pre style="font-size:0.8rem;white-space:pre-wrap;font-family:inherit;color:var(--muted);line-height:1.6;background:var(--white);padding:0.6rem;border-radius:6px;border:1px solid var(--border)">${m.body}</pre>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  document.getElementById('msgList').innerHTML=
+    secHTML('⚙️ إعدادات الروابط',settings_msgs,'settings')+
+    secHTML('📨 رسائل مراحل التأهيل',onboarding,'onboarding')+
+    secHTML('❌ رسائل الرفض والإعادة',rejection,'rejection');
+}
+function editMsg(id){ const m=messages.find(x=>x.id===id);if(!m)return; showEditModal('تعديل الرسالة',[{key:'label',label:'عنوان الرسالة',value:m.label,required:true},{key:'body',label:'نص الرسالة',value:m.body,type:'textarea',required:true}],v=>{ m.label=v.label; m.body=v.body; renderMessages();saveSettings();toast('تم الحفظ ✓');}); }
+function deleteMsg(id){ openModal('حذف الرسالة','<div class="note note-red">⚠️ هل تريد حذف هذه الرسالة؟</div>',()=>{messages=messages.filter(x=>x.id!==id);renderMessages();saveSettings();toast('تم الحذف');},'حذف','btn-red'); }
+function addMsg(cat){ showEditModal('إضافة رسالة جديدة',[{key:'label',label:'عنوان الرسالة',required:true},{key:'body',label:'نص الرسالة',type:'textarea',required:true}],v=>{ messages.push({id:'m'+Date.now(),category:cat,label:v.label,body:v.body}); renderMessages();saveSettings();toast('تم الإضافة ✓');}); }
+
+// ═══════════════════════════════════════════
+// POLICIES
+// ═══════════════════════════════════════════
+function renderPolicies(){
+  document.getElementById('policiesList').innerHTML=policies.map(p=>`
+    <div class="policy-item">
+      <div class="policy-title">${p.title}
+        <div style="display:flex;gap:0.4rem">
+          ${p.pdfUrl?`<a href="${p.pdfUrl}" target="_blank" class="btn btn-ghost btn-sm">📄 PDF</a>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="togglePolicyEdit('${p.id}')">تعديل</button>
+          <button class="btn btn-red btn-sm" onclick="deletePolicy('${p.id}')">حذف</button>
+        </div>
+      </div>
+      <div class="policy-body" id="pb-${p.id}">${p.body}</div>
+      <div class="policy-edit-area" id="pe-${p.id}">
+        <div class="form-field"><label class="form-label">نص السياسة</label>
+          <textarea class="form-input" id="pt-${p.id}" style="margin-bottom:0.5rem">${p.body}</textarea>
+        </div>
+        <div class="form-field"><label class="form-label">رابط PDF (اختياري)</label>
+          <input class="form-input" id="pp-${p.id}" dir="ltr" placeholder="https://drive.google.com/..." value="${p.pdfUrl||''}">
+        </div>
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn btn-orange btn-sm" onclick="savePolicy('${p.id}')">حفظ</button>
+          <button class="btn btn-ghost btn-sm" onclick="togglePolicyEdit('${p.id}')">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function togglePolicyEdit(id){ document.getElementById('pe-'+id).classList.toggle('open'); }
+function savePolicy(id){ const p=policies.find(x=>x.id===id); if(p){ p.title=document.getElementById('pt-title-'+id).value; p.body=document.getElementById('pt-'+id).value; renderPolicies();saveSettings();toast('تم الحفظ ✓');} }
+function deletePolicy(id){ openModal('حذف السياسة','<div class="note note-red">⚠️ هل تريد حذف هذه السياسة؟</div>',()=>{policies=policies.filter(x=>x.id!==id);renderPolicies();saveSettings();toast('تم الحذف');},'حذف','btn-red'); }
+function addPolicy(){ showEditModal('إضافة سياسة جديدة',[{key:'title',label:'عنوان السياسة',required:true},{key:'body',label:'نص السياسة',type:'textarea'}],v=>{ policies.push({id:'p'+Date.now(),title:v.title,body:v.body||'اكتب نص السياسة هنا...'}); renderPolicies();saveSettings();toast('تم الإضافة ✓');}); }
+
+// ═══════════════════════════════════════════
+// ADD TEACHER
+// ═══════════════════════════════════════════
+async function addTeacher() {
+  const fname=document.getElementById('f-fname').value.trim();
+  const lname=document.getElementById('f-lname').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const password=document.getElementById('f-password').value.trim();
+  const profileLink=document.getElementById('f-profilelink').value.trim();
+  const classification=document.getElementById('f-class').value;
+  const category=document.getElementById('f-category').value;
+  if(!fname||!lname){toast('أدخل اسم المعلم');return;}
+  const id=genId(); const name='أ. '+fname+' '+lname; const now=new Date().toISOString();
+  const teacher={id,name,phone,email,password,profileLink,classification,category,stage:1,addedAt:now,stageAt:now,vid1:'',vid2:'',subjects:[],grades:[]};
+  teachers.push(teacher);
+  const link=getTeacherLink(id);
+  const wm=messages.find(m=>m.id==='m1');
+  const preview=wm?wm.body.replace('{name}',name).replace('{link}',link):'';
+  document.getElementById('newLinkVal').textContent=link;
+  document.getElementById('welcomePreview').textContent='📱 رسالة الترحيب:\n'+preview;
+  document.getElementById('newLinkResult').style.display='block';
+  renderKanban(); toast('تم إنشاء المعلم ✓');
+  await pushToSheet('add', {...teacher, subjects:teacher.subjects.join(','), grades:teacher.grades.join(',')});
+}
+
+// ═══════════════════════════════════════════
+// BULK ADD
+// ═══════════════════════════════════════════
+async function bulkAddTeachers() {
+  const raw=document.getElementById('bulk-data').value.trim();
+  if(!raw){toast('أدخل بيانات المعلمين');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  let added=0, errors=[];
+  const newTeachers=[];
+  lines.forEach((line,i)=>{
+    const parts=line.split('|').map(p=>p.trim());
+    if(parts.length<6){errors.push('سطر '+(i+1)+': بيانات ناقصة');return;}
+    const [name,phone,email,password,classification,category,stageStr,profileLink]=parts;
+    const stage=parseInt(stageStr)||1;
+    const now=new Date().toISOString();
+    const t={id:'t'+Date.now()+i,name,phone,email:email||'',password:password||'',profileLink:profileLink||'',classification,category,stage,addedAt:now,stageAt:now,vid1:'',vid2:'',subjects:[],grades:[],rejNote:''};
+    teachers.push(t); newTeachers.push(t); added++;
+  });
+  const result=document.getElementById('bulkResult');
+  if(added){
+    result.innerHTML=`<div class="note note-green">✅ تم إضافة ${added} معلم بنجاح${errors.length?'<br>⚠️ '+errors.join('<br>'):''}</div>`;
+    renderKanban();
+    document.getElementById('bulk-data').value='';
+    for(const t of newTeachers){ await pushToSheet('add',{...t,subjects:'',grades:''}); }
+  } else {
+    result.innerHTML=`<div class="note note-red">❌ لم يتم إضافة أي معلم<br>${errors.join('<br>')}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// EVAL QUEUE
+// ═══════════════════════════════════════════
+function renderEvalQueue() {
+  const waiting=teachers.filter(t=>t.stage===2||t.stage===4);
+  const el=document.getElementById('evalList');
+  if(!waiting.length){el.innerHTML='<div class="empty">✅ لا توجد فيديوهات في انتظار التقييم</div>';return;}
+  el.innerHTML=waiting.map(t=>{
+    const d=daysSince(t.stageAt);
+    const slaSt=d>=3?'badge-red':d>=2?'badge-yellow':'badge-green';
+    const slaLbl=d>=3?`⚠️ تجاوز SLA (${d} أيام)`:d>=2?`⏰ يقترب SLA (${d} أيام)`:`✅ ضمن SLA (${d} أيام)`;
+    const vidUrl=t.stage===2?t.vid1:t.vid2;
+    return `<div class="card" style="margin-bottom:1rem">
+      <div class="card-head">
+        <div><div class="card-title">${t.name}</div><div style="font-size:0.8rem;color:var(--muted)">${t.category||'—'} · ${t.stage===2?'الفيديو الأول':'الفيديو الثاني'}</div></div>
+        <span class="badge ${slaSt}">${slaLbl}</span>
+      </div>
+      <div class="card-body">
+        <div class="sla-badge">⏱ SLA: التقييم خلال 3 أيام من استلام الفيديو</div>
+        <div style="margin-bottom:0.75rem">
+          <div style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem">رابط الفيديو</div>
+          <div class="link-box"><span class="link-text">${vidUrl||'لم يُرسل بعد'}</span>${vidUrl?`<a href="${vidUrl}" target="_blank" class="link-copy">فتح ↗</a>`:''}</div>
+        </div>
+        <div class="form-field"><label class="form-label">ملاحظات في حال طلب إعادة الفيديو <span style="color:var(--muted);font-weight:400;font-size:0.72rem">(اختياري)</span></label><textarea class="form-input" id="eval-note-${t.id}" style="height:60px" placeholder="اكتب ملاحظات واضحة للمعلم..."></textarea></div>
+        <div class="form-field">
+          <label class="form-label">أسباب جاهزة <span style="color:var(--muted);font-weight:400;font-size:0.72rem">(اختر واحد أو أكثر)</span></label>
+          <div id="reasons-${t.id}" style="display:flex;flex-direction:column;gap:0.35rem;margin-top:0.3rem">${getRejectionCheckboxes(t.id)}</div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn btn-green" style="flex:1" onclick="advance('${t.id}');renderEvalQueue();toast('تم القبول ✓')">✅ قبول للمرحلة التالية</button>
+          <button class="btn btn-sm" onclick="confirmFullAccept('${t.id}')" style="background:var(--green);color:#fff;border:none;padding:0.35rem 0.75rem;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit">🎉 قبول كلي مباشر</button>
+          <button class="btn btn-red btn-sm" onclick="redoEval('${t.id}')">🔄 طلب إعادة</button>
+          <button class="btn btn-red btn-sm" onclick="rejectWithReasons('${t.id}')">❌ رفض</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getRejectionCheckboxes(tid) {
+  const rejMsgs=messages.filter(m=>m.category==='rejection');
+  if(!rejMsgs.length) return '<div style="font-size:0.78rem;color:var(--muted)">لا توجد رسائل رفض — أضفها من صفحة الرسائل</div>';
+  return rejMsgs.map(m=>`<label style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.4rem 0.6rem;background:var(--off);border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:0.82rem"><input type="checkbox" value="${m.body}" style="margin-top:2px;accent-color:var(--orange)">${m.label}</label>`).join('');
+}
+function getSelectedReasons(id){ return [...document.querySelectorAll('#reasons-'+id+' input[type=checkbox]:checked')].map(cb=>cb.value); }
+function buildFeedbackMsg(id){ const note=document.getElementById('eval-note-'+id)?.value.trim()||''; const reasons=getSelectedReasons(id); let msg=''; if(note) msg+=note; if(reasons.length){if(msg) msg+='\n\n'; msg+='الملاحظات التالية:\n'+reasons.map(r=>'• '+r).join('\n');} return msg; }
+function redoEval(id){ const msg=buildFeedbackMsg(id); if(!msg){toast('⚠️ اكتب ملاحظة أو اختر سبباً على الأقل');return;} toast('تم إرسال طلب الإعادة ✓'); }
+function rejectWithReasons(id){ const reasons=getSelectedReasons(id); if(!reasons.length){toast('⚠️ اختر سبب الرفض من القائمة');return;} const msg=buildFeedbackMsg(id); openModal('تأكيد رفض المعلم','<div class="note note-red">⚠️ تأكيد الرفض:</div><pre style="font-size:0.8rem;background:var(--off);padding:0.5rem;border-radius:6px;white-space:pre-wrap">'+msg+'</pre>',()=>{doRejectFinal(id,msg);renderEvalQueue();},'رفض نهائي','btn-red'); }
+
+// ═══════════════════════════════════════════
+// TEACHER PORTAL
+// ═══════════════════════════════════════════
+const PORTAL_STAGES=[
+  {label:'في انتظار إرسال الفيديو الأول',group:'مراحل التقييم'},
+  {label:'قيد مراجعة الفيديو الأول',group:'مراحل التقييم'},
+  {label:'في انتظار إرسال الفيديو الثاني',group:'مراحل التقييم'},
+  {label:'قيد مراجعة الفيديو الثاني',group:'مراحل التقييم'},
+  {label:'حجز موعد الاجتماع',group:'مرحلة القبول'},
+  {label:'إرسال بياناتك',group:'مرحلة القبول'},
+  {label:'في انتظار تفعيل الحساب',group:'مرحلة القبول'},
+  {label:'أونبوردينج ١ — بياناتك الدراسية',group:'الأونبوردينج'},
+  {label:'أونبوردينج ٢ — مراجعة صفحتك وتحميل التطبيق',group:'الأونبوردينج'},
+  {label:'أونبوردينج ٣ — إضافة أنشطتك',group:'الأونبوردينج'},
+  {label:'نشط ✅',group:'الأونبوردينج'},
+];
+
+function renderTeacherPortal() {
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId))||teachers[0];
+  if(!t) return;
+  const stage=parseInt(t.stage)||1;
+  updateTeacherNav(stage);
+  document.getElementById('t-portal-name').textContent='أهلاً يا '+t.name+' 👋';
+  document.getElementById('t-stage-lbl').textContent='المرحلة الحالية: '+(PORTAL_STAGES[stage-1]?.label||'مكتمل');
+
+  if(!overviewHidden){
+    let lastGroup='';
+    document.getElementById('overviewSteps').innerHTML=PORTAL_STAGES.filter((s,i)=>{
+      if(s.group==='في حال القبول'&&stage<=4) return false;
+      return true;
+    }).map(s=>{
+      const idx=PORTAL_STAGES.indexOf(s)+1;
+      const isDone=idx<stage; const isAct=idx===stage;
+      let gh='';
+      if(s.group!==lastGroup){gh=`<div style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:0.4rem 0 0.2rem">${s.group}</div>`;lastGroup=s.group;}
+      return `${gh}<div class="ov-step ${isDone?'done':isAct?'active':'future'}"><div class="ov-dot">${isDone?'✓':idx}</div>${s.label}</div>`;
+    }).join('');
+  }
+
+  const content=document.getElementById('currentStageContent');
+  if(stage===1||stage===3){
+    const isFirst=stage===1;
+    // Get eval examples section
+    const evalSec=videoSections.find(s=>s.type==='eval');
+    // Stage 1: show examples 0 and 1, Stage 3: show example 2
+    const evalVids = isFirst
+      ? [evalSec?.videos[0], evalSec?.videos[1]].filter(Boolean)
+      : [evalSec?.videos[2]].filter(Boolean);
+    const evalHTML = evalVids.length ? evalVids.map(v=>{
+      const em=ytEmbed(v.url);
+      return '<div style="margin-bottom:1rem">'
+        +'<div style="font-size:0.85rem;font-weight:700;color:var(--slate);margin-bottom:0.35rem">▶ '+v.title+'</div>'
+        +(v.desc?'<div class="note note-blue" style="margin-bottom:0.5rem">📌 '+v.desc+'</div>':'')
+        +(em?'<div class="vid-frame"><iframe src="'+em+'" allowfullscreen></iframe></div>'
+            :'<div class="vid-frame" style="font-size:0.85rem;color:#888">لم يُضف رابط بعد</div>')
+        +'</div>';
+    }).join('') : '<div class="note note-orange">📌 سيتم إضافة أمثلة قريباً</div>';
+
+    content.innerHTML='<div class="vid-card">'
+      +'<div class="vid-head">🎬 '+(isFirst?'الفيديو الأول':'الفيديو الثاني')+' — ماذا يجب أن يتضمن؟</div>'
+      +'<div class="vid-body">'
+      +'<div class="sla-badge">⏱ سيتم مراجعة فيديوك خلال 3 أيام عمل</div>'
+      +(evalVids.length?'<div style="font-size:0.88rem;font-weight:700;margin-bottom:0.75rem">📽 أمثلة على فيديوهات ناجحة:</div>':'')
+      +evalHTML
+      +'<div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.85rem;margin-bottom:0.75rem">'
+      +'<div style="font-size:0.78rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem">📎 أرسل رابط فيديوك هنا</div>'
+      +'<input class="form-input" id="vid-input-'+stage+'" placeholder="الصق رابط يوتيوب أو Google Drive..." dir="ltr" style="margin-bottom:0.6rem">'
+      +'<button class="btn btn-orange btn-sm" onclick="submitVideo('+stage+')">إرسال الفيديو</button>'
+      +'</div>'
+      +'<div class="note note-orange">⏳ بعد الإرسال، سيراجع فريق التقييم فيديوك خلال 3 أيام عمل وستصلك نتيجة التقييم.</div>'
+      +'</div></div>';
+  } else if(stage===2||stage===4){
+    content.innerHTML=`<div class="note note-blue" style="font-size:0.9rem;padding:1rem">⏳ <strong>فيديوك قيد المراجعة الآن</strong><br>سيتواصل معك فريق التقييم خلال 3 أيام عمل.</div>`;
+  } else if(stage===5){
+    const calendlyMsg = messages.find(m=>m.id==='m_calendly');
+    const calendlyUrl = calendlyMsg?.body?.trim() || '#';
+    content.innerHTML='<div class="vid-card"><div class="vid-head">📅 حجز موعد الاجتماع</div><div class="vid-body">'
+      +'<div class="note note-green">🎉 مبروك على قبول فيديوك! الخطوة التالية هي حجز موعد الاجتماع مع فريقنا.</div>'
+      +'<a href="'+calendlyUrl+'" target="_blank" class="btn btn-orange btn-full" style="margin-top:0.5rem">📅 حجز موعد عبر Calendly</a>'
+      +'</div></div>';
+  } else if(stage===6){
+    content.innerHTML='<div class="vid-card"><div class="vid-head">📋 إرسال بياناتك</div><div class="vid-body"><div class="note note-green">✅ تم الاجتماع بنجاح! يرجى تعبئة بياناتك لإنشاء صفحتك.</div><button class="btn btn-orange btn-full" onclick="openSubjectModal()">إرسال البيانات والمواد 📝</button></div></div>';
+  } else if(stage===7){
+    // Waiting for admin to create account
+    content.innerHTML=`<div class="note note-blue" style="font-size:0.9rem;padding:1rem">⚙️ <strong>في انتظار تفعيل حسابك</strong><br>جاري إعداد حسابك على منصة GAGA. سيتم إشعارك فور الانتهاء.</div>`;
+  } else if(stage===8){
+    const t8=teachers.find(x=>String(x.id)===String(currentTeacherId));
+    content.innerHTML='<div class="vid-card"><div class="vid-head">📚 أونبوردينج ١ — موادك الدراسية والعقد</div><div class="vid-body">'
+      +'<div class="note note-green">🎉 مرحباً بك في GAGA! حسابك جاهز.</div>'
+      +'<div class="note note-blue">📋 يرجى تحديد المواد التي تدرسها ورفع العقد الموقع للمتابعة.</div>'
+      +(t8?.contractLink?'<div class="note note-green">✅ تم رفع العقد: <a href="'+t8.contractLink+'" target="_blank" style="color:var(--blue)">عرض العقد</a></div>':'')
+      +'<button class="btn btn-orange btn-full" onclick="openSubjectModal()">📝 تحديد موادي ورفع العقد الموقع</button>'
+      +'</div></div>';
+  } else if(stage===9){
+    // Onboarding 2 — review profile + download app
+    const t2=teachers.find(x=>String(x.id)===String(currentTeacherId));
+    const profileUrl=t2?.profileLink||'#';
+    const appEmail2=t2?.appEmail||t2?.email||'—';
+    const appPass2=t2?.appPassword||'—';
+    content.innerHTML='<div class="vid-card"><div class="vid-head">🔗 أونبوردينج ٢ — مراجعة صفحتك وتحميل التطبيق</div><div class="vid-body">'
+      +'<div class="note note-green">ممتاز! الخطوة التالية: راجع صفحتك على المنصة وحمّل تطبيق المعلمين.</div>'
+      +'<div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.85rem;margin-bottom:0.85rem">'
+      +'<div style="font-size:0.8rem;font-weight:700;margin-bottom:0.5rem">🔑 بيانات دخول تطبيق المعلمين</div>'
+      +'<div style="font-size:0.82rem;margin-bottom:0.25rem">الإيميل: <strong dir="ltr">'+appEmail2+'</strong></div>'
+      +'<div style="font-size:0.82rem">كلمة السر: <strong dir="ltr">'+appPass2+'</strong></div>'
+      +'</div>'
+      +'<a href="'+profileUrl+'" target="_blank" class="btn btn-orange btn-full" style="margin-bottom:0.5rem">👁 مراجعة صفحتي على المنصة</a>'
+      +'<a href="https://org.gaga-app.com/" target="_blank" class="btn btn-slate btn-full" style="margin-bottom:0.5rem">💻 فتح تطبيق المعلمين (متصفح)</a>'
+      +'<a href="http://onelink.to/gaga_provider" target="_blank" class="btn btn-ghost btn-full" style="margin-bottom:0.85rem">📱 تحميل التطبيق على الموبايل</a>'
+      +'<div class="note note-orange">📌 بعد مراجعة صفحتك وتحميل التطبيق، اضغط للمتابعة.</div>'
+      +'<button class="btn btn-green btn-full" onclick="completeOnboarding2()">✅ راجعت صفحتي وحملت التطبيق</button>'
+      +'</div></div>';
+  } else if(stage===10){
+    // Onboarding 3 — add activities
+    content.innerHTML='<div class="vid-card"><div class="vid-head">➕ أونبوردينج ٣ — إضافة أنشطتك</div><div class="vid-body">'
+      +'<div class="note note-green">رائع! الخطوة الأخيرة: أضف أنشطتك على المنصة.</div>'
+      +'<div class="note note-blue">📌 اقرأ اتفاقية الاستخدام أولاً، ثم انضم لمجموعة الواتساب، وأخيراً أضف أنشطتك.</div>'
+      +'<div class="note note-blue">📋 يرجى إكمال الخطوتين التاليتين قبل البدء:</div>'
+      +'<a href="https://drive.google.com/file/d/19mDirD2GdsYcdAo19HourC9kozPcIeSU/view" target="_blank" class="btn btn-ghost btn-full" style="margin-bottom:0.5rem">📄 قراءة اتفاقية الاستخدام</a>'
+      +'<a href="https://chat.whatsapp.com/FBxc3hLzqO13VAKQmdp4ZX" target="_blank" class="btn btn-ghost btn-full" style="margin-bottom:0.85rem">💬 الانضمام لمجموعة مزودي الخدمات</a>'
+      +'<button class="btn btn-green btn-full" onclick="completeOnboarding3()">✅ أكملت جميع خطوات الأونبوردينج</button>'
+      +'</div></div>';
+  } else if(stage===11){
+    content.innerHTML=`<div class="note note-green" style="font-size:0.9rem;padding:1rem">🟢 <strong>أنت نشط في GAGA!</strong><br>يمكنك الآن إدارة أنشطتك وحجوزاتك من صفحتي.</div>`;
+  } else if(stage===-1){
+    content.innerHTML=`<div class="note note-orange" style="font-size:0.9rem;padding:1rem">شكراً لتقديمك للانضمام إلى GAGA.<br>بعد المراجعة، سنتواصل معك في حال توفر فرصة مناسبة مستقبلاً.</div>`;
+  }
+}
+
+function completeOnboarding2() {
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId));
+  if(!t)return;
+  t.stage=10; t.stageAt=new Date().toISOString();
+  pushToSheet('update',{id:t.id,stage:10,stageAt:t.stageAt});
+  renderTeacherPortal();
+  toast('ممتاز! انتقلت للخطوة التالية ✓');
+}
+
+function completeOnboarding3() {
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId));
+  if(!t)return;
+  t.stage=11; t.stageAt=new Date().toISOString();
+  pushToSheet('update',{id:t.id,stage:11,stageAt:t.stageAt});
+  renderTeacherPortal();
+  updateTeacherNav(11);
+  toast('🎉 مبروك! أصبحت نشطاً في GAGA!');
+}
+
+function submitVideo(stage) {
+  const url=document.getElementById('vid-input-'+stage)?.value.trim();
+  if(!url){toast('أدخل رابط الفيديو');return;}
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId));
+  if(t){ if(stage===1) t.vid1=url; else t.vid2=url; t.stage=stage+1; t.stageAt=new Date().toISOString(); renderTeacherPortal(); toast('تم إرسال الفيديو ✓ سنراجعه خلال 3 أيام.'); pushToSheet('update',{id:t.id,stage:t.stage,stageAt:t.stageAt,vid1:t.vid1,vid2:t.vid2}); }
+}
+
+function toggleOverview() {
+  overviewHidden=!overviewHidden;
+  const ov=document.getElementById('stageOverview');
+  const existing=document.getElementById('showOverviewBtn');
+  if(overviewHidden){
+    ov.style.display='none';
+    if(!existing){
+      const btn=document.createElement('button');
+      btn.id='showOverviewBtn';
+      btn.style.cssText='margin-bottom:0.75rem;width:100%;padding:0.65rem 1rem;background:var(--white);border:1.5px solid var(--orange);border-radius:8px;color:var(--orange);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:right';
+      btn.textContent='إظهار نظرة عامة على المراحل ▾';
+      btn.onclick=toggleOverview;
+      ov.parentNode.insertBefore(btn,ov);
+    }
+  } else {
+    ov.style.display='block';
+    if(existing) existing.remove();
+    renderTeacherPortal();
+  }
+}
+
+// ═══════════════════════════════════════════
+// LIBRARY
+// ═══════════════════════════════════════════
+// Track watched videos per teacher
+let watchedVideos = JSON.parse(localStorage.getItem('gaga_watched_'+currentTeacherId)||'{}');
+
+function markWatched(vidId) {
+  watchedVideos[vidId] = true;
+  localStorage.setItem('gaga_watched_'+currentTeacherId, JSON.stringify(watchedVideos));
+  // Push to sheet
+  pushToSheet('update', {id: currentTeacherId, ['watched_'+vidId]: '1'});
+  renderLib();
+  toast('تم تسجيل مشاهدة الفيديو ✓');
+}
+
+function toggleVid(vidId) {
+  const el = document.getElementById('vid-body-'+vidId);
+  const arrow = document.getElementById('vid-arrow-'+vidId);
+  if(!el) return;
+  if(el.style.display==='none'){ el.style.display='block'; if(arrow) arrow.textContent='▴'; }
+  else { el.style.display='none'; if(arrow) arrow.textContent='▾'; }
+}
+
+function renderLib() {
+  // Refresh watched from localStorage
+  watchedVideos = JSON.parse(localStorage.getItem('gaga_watched_'+currentTeacherId)||'{}');
+  
+  const mandatory = videoSections.filter(s=>s.type==='mandatory');
+  const optional = videoSections.filter(s=>s.type==='optional');
+  const allSecs = [...mandatory, ...optional];
+  
+  if(!allSecs.length){ document.getElementById('libContent').innerHTML='<div class="empty">لا توجد فيديوهات بعد</div>'; return; }
+  
+  document.getElementById('libContent').innerHTML = allSecs.map((sec,si)=>{
+    const isMandatory = sec.type==='mandatory';
+    const badgeColor = isMandatory ? 'var(--orange)' : 'var(--blue)';
+    const badgeText = isMandatory ? 'إجباري' : 'اختياري';
+    const watchedCount = sec.videos.filter(v=>watchedVideos[v.id]).length;
+    const totalCount = sec.videos.length;
+    
+    return '<div class="card" style="margin-bottom:1rem">'
+      // Section header
+      +'<div class="card-head">'
+      +'<div style="display:flex;align-items:center;gap:0.75rem;flex:1">'
+      +'<span style="font-size:0.95rem;font-weight:700">'+sec.name+'</span>'
+      +'<span style="background:'+badgeColor+';color:#fff;font-size:0.7rem;font-weight:700;padding:0.15rem 0.55rem;border-radius:20px">'+badgeText+'</span>'
+      +'<span style="font-size:0.75rem;color:var(--muted)">'+watchedCount+'/'+totalCount+' شاهدت</span>'
+      +'</div>'
+      +'</div>'
+      // Videos as accordion
+      +'<div class="card-body" style="padding:0.5rem">'
+      +sec.videos.map((v,j)=>{
+        const em = ytEmbed(v.url);
+        const watched = watchedVideos[v.id];
+        return '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:0.5rem">'
+          // Video header - clickable
+          +'<div style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;cursor:pointer;background:'+(watched?'var(--green-light)':'var(--off)')+'" data-vid="'+v.id+'" onclick="toggleVid(this.dataset.vid)">'
+          +'<span style="background:'+(watched?'var(--green)':'var(--slate-mid)')+';color:#fff;font-size:0.72rem;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(watched?'✓':(j+1))+'</span>'
+          +'<div style="flex:1">'
+          +'<div style="font-size:0.88rem;font-weight:600;color:'+(watched?'var(--green)':'var(--text)')+'">'+v.title+'</div>'
+          +(v.desc?'<div style="font-size:0.75rem;color:var(--muted);margin-top:0.15rem">'+v.desc+'</div>':'')
+          +'</div>'
+          +(watched?'<span style="font-size:0.72rem;color:var(--green);font-weight:700">✅ شاهدت</span>':'')
+          +'<span id="vid-arrow-'+v.id+'" style="color:var(--muted)">▾</span>'
+          +'</div>'
+          // Video body - hidden by default
+          +'<div id="vid-body-'+v.id+'" style="display:none">'
+          +(em
+            ?'<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden"><iframe src="'+em+'" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen></iframe></div>'
+            :'<div style="height:100px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.85rem;background:var(--off)">لم يُضف رابط بعد</div>')
+          +(!watched?'<div style="padding:0.75rem;text-align:center;background:var(--off)"><button data-vid="'+v.id+'" class="btn btn-green btn-sm watch-btn">✅ شاهدت هذا الفيديو</button></div>':'')
+          +'</div>'
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+  attachLibEvents();
+}
+
+// ═══════════════════════════════════════════
+// EVENT DELEGATION FOR LIBRARY
+// ═══════════════════════════════════════════
+function attachLibEvents() {
+  const libEl = document.getElementById('libContent');
+  if(!libEl) return;
+  // Remove old listener if any
+  libEl.onclick = function(e) {
+    // Toggle video accordion
+    const vidHeader = e.target.closest('[data-vid]');
+    if(vidHeader && !e.target.classList.contains('watch-btn') && !e.target.closest('.watch-btn')) {
+      const vid = vidHeader.dataset.vid || vidHeader.closest('[data-vid]')?.dataset.vid;
+      if(vid) toggleVid(vid);
+      return;
+    }
+    // Watch button
+    const watchBtn = e.target.closest('.watch-btn');
+    if(watchBtn) {
+      const vid = watchBtn.dataset.vid;
+      if(vid) markWatched(vid);
+      return;
+    }
+  };
+}
+
+// ═══════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════
+function renderHome() {
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId))||teachers[0];
+  const ba=document.getElementById('t-banner-area');
+  if(ba) ba.innerHTML=banner?bannerHTML():'';
+  document.getElementById('t-profile-link').textContent=t?.profileLink||'لم يُضف رابط الصفحة بعد';
+  // Show app credentials
+  const appCredsEl=document.getElementById('t-app-creds');
+  if(appCredsEl && t?.appEmail) {
+    appCredsEl.innerHTML=`<div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.85rem;margin-bottom:1rem">
+      <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.5rem;color:var(--slate)">🔑 بيانات دخول تطبيق المعلمين</div>
+      <div style="font-size:0.82rem;margin-bottom:0.25rem">الإيميل: <strong dir="ltr">${t.appEmail}</strong></div>
+      <div style="font-size:0.82rem;margin-bottom:0.5rem">كلمة السر: <strong dir="ltr">${t.appPassword||'—'}</strong></div>
+      <a href="https://org.gaga-app.com/" target="_blank" class="btn btn-orange btn-sm">💻 فتح التطبيق</a>
+      <a href="http://onelink.to/gaga_provider" target="_blank" class="btn btn-ghost btn-sm" style="margin-right:0.4rem">📱 تحميل التطبيق</a>
+    </div>`;
+  }
+  document.getElementById('tHomePolicies').innerHTML=policies.length?policies.map(p=>{
+    const pdf=p.pdfUrl?('<a href="'+p.pdfUrl+'" target="_blank" onclick="event.stopPropagation()" style="font-size:0.75rem;color:var(--blue);font-weight:600;margin-left:0.5rem">📄 فتح PDF</a>'):'';
+    return '<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem;overflow:hidden"><div style="padding:0.75rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--off)" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'"><span style="font-weight:600;font-size:0.88rem">'+p.title+'</span><div>'+pdf+'▾</div></div><div style="display:none;padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted);line-height:1.7;white-space:pre-line;border-top:1px solid var(--border)">'+p.body+'</div></div>';
+  }).join(''):'<div class=\"empty\">لا توجد سياسات حتى الآن</div>';
+  const optSecs=videoSections.filter(s=>s.type==='optional');
+  document.getElementById('tHomeOptional').innerHTML=optSecs.length?optSecs.map(sec=>
+    '<div style="margin-bottom:1rem">'
+    +'<div style="font-size:0.88rem;font-weight:700;color:var(--slate);margin-bottom:0.75rem">'+sec.name+'</div>'
+    +sec.videos.map((v,j)=>{
+      const em=ytEmbed(v.url);
+      return '<div style="margin-bottom:1rem;background:var(--off);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+        +'<div style="background:var(--slate);padding:0.6rem 0.85rem"><span style="color:#fff;font-size:0.82rem;font-weight:600">'+(j+1)+'. '+v.title+'</span></div>'
+        +(v.desc?'<div style="padding:0.4rem 0.85rem;font-size:0.78rem;color:var(--muted)">'+v.desc+'</div>':'')
+        +(em
+          ?'<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden"><iframe src="'+em+'" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen></iframe></div>'
+          :'<div style="height:80px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.82rem">لم يُضف رابط بعد</div>')
+        +'</div>';
+    }).join('')
+    +'</div>'
+  ).join(''):'<div class="empty">لا توجد فيديوهات اختيارية</div>';
+}
+
+// ═══════════════════════════════════════════
+// TEACHER REQUESTS
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// DYNAMIC FORM DEFINITIONS
+// ═══════════════════════════════════════════
+let reqFormDefs = {
+  new_activity: {
+    label: 'إضافة نشاط جديد', icon: '✨',
+    fields: [
+      {id:'f1', type:'text',     label:'عنوان النشاط',           required:true,  placeholder:'مثال: رياضيات مستوى ابتدائي'},
+      {id:'f2', type:'textarea', label:'النبذة المبسطة',          required:true,  placeholder:'وصف مختصر يجذب العملاء...'},
+      {id:'f3', type:'textarea', label:'الأهداف التعليمية',       required:false, placeholder:'اكتب الأهداف التعليمية...'},
+      {id:'f4', type:'textarea', label:'وصف النشاط',              required:false, placeholder:'وصف تفصيلي...'},
+      {id:'f5', type:'number',   label:'عدد الجلسات',             required:true,  placeholder:'مثال: 8'},
+      {id:'f6', type:'textarea', label:'عناوين الجلسات',          required:false, placeholder:'الجلسة الأولى... الجلسة الثانية...'},
+      {id:'f7', type:'number',   label:'مدة النشاط بالدقائق',    required:true,  placeholder:'مثال: 60'},
+      {id:'f8', type:'text',     label:'الأعمار المستهدفة',       required:true,  placeholder:'مثال: 6-12 سنة'},
+      {id:'f9', type:'number',   label:'السعر بالريال السعودي',   required:true,  placeholder:'مثال: 150'},
+      {id:'f10',type:'select',   label:'تصنيف النشاط',            required:true,  options:['تأسيس ومهارات','تقوية ومتابعة مدرسية','مواهب ومهارات']},
+      {id:'f11',type:'yesno',    label:'هل البرنامج مستويات؟',   required:true},
+      {id:'f12',type:'select',   label:'لغة النشاط',              required:true,  options:['العربية','الإنجليزية','ثنائي اللغة']},
+      {id:'f13',type:'textarea', label:'ملاحظات إضافية',          required:false, placeholder:'أي ملاحظات...'},
+    ]
+  },
+  edit: {
+    label: 'تعديل نشاط', icon: '✏️',
+    fields: [
+      {id:'e1', type:'text',     label:'اسم النشاط الحالي',      required:true,  placeholder:'النشاط المراد تعديله'},
+      {id:'e2', type:'textarea', label:'التعديل المطلوب',         required:true,  placeholder:'اشرح التعديل بالتفصيل...'},
+    ]
+  },
+  disable: {
+    label: 'تعطيل نشاط', icon: '⏸️',
+    fields: [
+      {id:'d1', type:'text',     label:'اسم النشاط',              required:true,  placeholder:'النشاط المراد تعطيله'},
+      {id:'d2', type:'text',     label:'السبب',                   required:true,  placeholder:'سبب التعطيل'},
+    ]
+  },
+  leave: {
+    label: 'طلب إجازة', icon: '🌴',
+    fields: [
+      {id:'l1', type:'date',     label:'من تاريخ',                required:true},
+      {id:'l2', type:'date',     label:'حتى تاريخ',               required:true},
+      {id:'l3', type:'text',     label:'السبب',                   required:false, placeholder:'سبب الإجازة'},
+    ]
+  },
+  deactivate: {
+    label: 'تعطيل الحساب', icon: '🔒',
+    fields: [
+      {id:'da1',type:'text',     label:'المدة المتوقعة',           required:true,  placeholder:'مثال: شهر واحد'},
+      {id:'da2',type:'textarea', label:'السبب',                   required:false, placeholder:'سبب التعطيل...'},
+    ]
+  }
+};
+
+let currentFormType = 'new_activity';
+
+function addNewFormType() {
+  const html = `
+    <div class="form-field">
+      <label class="form-label">اسم النوع (بالإنجليزي — بدون مسافات) <span style="color:var(--red)">*</span></label>
+      <input class="form-input" id="nt-key" dir="ltr" placeholder="مثال: report_request">
+    </div>
+    <div class="form-field">
+      <label class="form-label">العنوان بالعربي <span style="color:var(--red)">*</span></label>
+      <input class="form-input" id="nt-label" placeholder="مثال: طلب تقرير">
+    </div>
+    <div class="form-field">
+      <label class="form-label">الأيقونة (emoji)</label>
+      <input class="form-input" id="nt-icon" placeholder="📝" style="font-size:1.2rem;width:80px">
+    </div>`;
+  openModal('إضافة نوع طلب جديد', html, () => {
+    const key = document.getElementById('nt-key').value.trim().replace(/\s+/g,'_');
+    const label = document.getElementById('nt-label').value.trim();
+    const icon = document.getElementById('nt-icon').value.trim()||'📝';
+    if(!key||!label){toast('⚠️ الاسم والعنوان مطلوبان');return false;}
+    if(reqFormDefs[key]){toast('⚠️ هذا النوع موجود بالفعل');return false;}
+    reqFormDefs[key]={label,icon,fields:[]};
+    REQ_TYPES[key]={l:label,i:icon};
+    // Add tab button
+    const tabsEl=document.querySelector('#page-formDesign .btn[onclick*="deactivate"]')?.parentElement;
+    if(tabsEl){
+      const btn=document.createElement('button');
+      btn.className='btn btn-ghost btn-sm';
+      btn.textContent=icon+' '+label;
+      btn.onclick=function(){selectFormType(key,this);};
+      tabsEl.insertBefore(btn, tabsEl.querySelector('[onclick*="addNewFormType"]'));
+    }
+    selectFormType(key, null);
+    toast('تم إضافة نوع الطلب ✓');
+  });
+}
+
+function selectFormType(type, el) {
+  currentFormType = type;
+  document.querySelectorAll('#page-formDesign .btn').forEach(b=>b.className='btn btn-ghost btn-sm');
+  el.className = 'btn btn-orange btn-sm';
+  renderFormDesign();
+}
+
+function renderFormDesign() {
+  const def = reqFormDefs[currentFormType];
+  if(!def) return;
+  document.getElementById('formDesignTitle').textContent = 'حقول فورم: ' + def.label;
+
+  // Fields list
+  const listEl = document.getElementById('formFieldsList');
+  if(!def.fields.length) {
+    listEl.innerHTML = '<div class="empty">لا توجد حقول — أضف حقلاً جديداً</div>';
+  } else {
+    listEl.innerHTML = def.fields.map((f,i) => `
+      <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;display:flex;align-items:flex-start;gap:0.75rem">
+        <div style="flex:1">
+          <div style="font-size:0.85rem;font-weight:600">${f.label} ${f.required?'<span style="color:var(--red)">*</span>':''}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem">${f.type}${f.options?' · '+f.options.join(' / '):''}</div>
+        </div>
+        <div style="display:flex;gap:0.3rem;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="editField('${currentFormType}',${i})">تعديل</button>
+          <button class="btn btn-red btn-sm" onclick="deleteField('${currentFormType}',${i})">حذف</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Preview
+  renderFormPreview();
+}
+
+function renderFormPreview() {
+  const def = reqFormDefs[currentFormType];
+  const previewEl = document.getElementById('formPreview');
+  if(!def||!previewEl) return;
+  previewEl.innerHTML = def.fields.map(f => {
+    let input = '';
+    if(f.type==='text'||f.type==='number'||f.type==='date')
+      input = `<input class="form-input" type="${f.type}" placeholder="${f.placeholder||''}" disabled>`;
+    else if(f.type==='textarea')
+      input = `<textarea class="form-input" placeholder="${f.placeholder||''}" disabled style="height:70px"></textarea>`;
+    else if(f.type==='select')
+      input = `<select class="form-input" disabled><option>اختر...</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+    else if(f.type==='yesno')
+      input = `<div style="display:flex;gap:0.5rem"><button class="btn btn-ghost btn-sm" disabled>نعم</button><button class="btn btn-ghost btn-sm" disabled>لا</button></div>`;
+    return `<div class="form-field"><label class="form-label">${f.label}${f.required?'<span style="color:var(--red)">*</span>':''}</label>${input}</div>`;
+  }).join('') || '<div class="empty">لا توجد حقول</div>';
+}
+
+function addFormField() {
+  const html = `
+    <div class="form-field">
+      <label class="form-label">نوع الحقل</label>
+      <select class="form-input" id="nf-type" onchange="toggleOptionsField()">
+        <option value="text">text — نص قصير</option>
+        <option value="textarea">textarea — نص طويل</option>
+        <option value="number">number — رقم</option>
+        <option value="date">date — تاريخ</option>
+        <option value="select">select — اختيار من قائمة</option>
+        <option value="yesno">yesno — نعم / لا</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">عنوان الحقل <span style="color:var(--red)">*</span></label>
+      <input class="form-input" id="nf-label" placeholder="مثال: عنوان النشاط">
+    </div>
+    <div class="form-field">
+      <label class="form-label">النص التوضيحي (placeholder)</label>
+      <input class="form-input" id="nf-placeholder" placeholder="مثال: اكتب العنوان هنا...">
+    </div>
+    <div class="form-field" id="nf-options-wrap" style="display:none">
+      <label class="form-label">الخيارات (افصل بفاصلة)</label>
+      <input class="form-input" id="nf-options" placeholder="خيار ١,خيار ٢,خيار ٣">
+    </div>
+    <div class="form-field">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;font-weight:600">
+        <input type="checkbox" id="nf-required" style="accent-color:var(--orange)"> إجباري
+      </label>
+    </div>`;
+  openModal('إضافة حقل جديد', html, () => {
+    const type = document.getElementById('nf-type').value;
+    const label = document.getElementById('nf-label').value.trim();
+    const placeholder = document.getElementById('nf-placeholder').value.trim();
+    const required = document.getElementById('nf-required').checked;
+    const optsStr = document.getElementById('nf-options')?.value.trim()||'';
+    if(!label){toast('⚠️ العنوان مطلوب');return false;}
+    const options = type==='select' && optsStr ? optsStr.split(',').map(o=>o.trim()) : undefined;
+    const id='f'+Date.now();
+    reqFormDefs[currentFormType].fields.push({id,type,label,required,placeholder,options});
+    renderFormDesign();
+    toast('تم إضافة الحقل ✓');
+  });
+  setTimeout(toggleOptionsField,100);
+}
+
+function toggleOptionsField(){
+  const t=document.getElementById('nf-type')?.value;
+  const wrap=document.getElementById('nf-options-wrap');
+  if(wrap) wrap.style.display=(t==='select')?'block':'none';
+}
+
+function editField(formType, idx) {
+  const f = reqFormDefs[formType]?.fields[idx];
+  if(!f) return;
+  const showOpts = f.type==='select';
+  const html = `
+    <div class="form-field">
+      <label class="form-label">نوع الحقل</label>
+      <input class="form-input" value="${f.type}" disabled style="background:#eee;color:#888">
+    </div>
+    <div class="form-field">
+      <label class="form-label">عنوان الحقل <span style="color:var(--red)">*</span></label>
+      <input class="form-input" id="ef-label" value="${f.label||''}">
+    </div>
+    <div class="form-field">
+      <label class="form-label">النص التوضيحي</label>
+      <input class="form-input" id="ef-placeholder" value="${f.placeholder||''}">
+    </div>
+    ${showOpts?`<div class="form-field"><label class="form-label">الخيارات (افصل بفاصلة)</label><input class="form-input" id="ef-options" value="${(f.options||[]).join(',')}"></div>`:''}
+    <div class="form-field">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;font-weight:600">
+        <input type="checkbox" id="ef-required" ${f.required?'checked':''} style="accent-color:var(--orange)"> إجباري
+      </label>
+    </div>`;
+  openModal('تعديل الحقل', html, () => {
+    const label = document.getElementById('ef-label').value.trim();
+    if(!label){toast('⚠️ العنوان مطلوب');return false;}
+    f.label = label;
+    f.placeholder = document.getElementById('ef-placeholder').value.trim();
+    f.required = document.getElementById('ef-required').checked;
+    if(showOpts){
+      const opts=document.getElementById('ef-options')?.value.trim()||'';
+      f.options=opts?opts.split(',').map(o=>o.trim()):[];
+    }
+    renderFormDesign();
+    toast('تم التعديل ✓');
+  });
+}
+
+function deleteField(formType, idx) {
+  const f = reqFormDefs[formType]?.fields[idx];
+  if(!f) return;
+  openModal('تأكيد الحذف',
+    `<div class="note note-red">⚠️ هل تريد حذف الحقل "<strong>${f.label}</strong>"؟</div>`,
+    () => {
+      reqFormDefs[formType].fields.splice(idx,1);
+      renderFormDesign();
+      toast('تم الحذف');
+    }, 'حذف', 'btn-red'
+  );
+}
+
+const REQ_FORMS={
+  new_activity:`<div class="form-field"><label class="form-label">اسم النشاط</label><input class="form-input" placeholder="مثال: رياضيات — ابتدائي"></div><div class="form-grid"><div class="form-field"><label class="form-label">السعر/ساعة</label><input class="form-input" placeholder="50 ريال"></div><div class="form-field"><label class="form-label">المستوى</label><input class="form-input" placeholder="ابتدائي"></div></div><div class="form-field"><label class="form-label">وصف النشاط</label><textarea class="form-input"></textarea></div>`,
+  edit:`<div class="form-field"><label class="form-label">اسم النشاط</label><input class="form-input"></div><div class="form-field"><label class="form-label">التعديل المطلوب</label><textarea class="form-input"></textarea></div>`,
+  disable:`<div class="form-field"><label class="form-label">اسم النشاط</label><input class="form-input"></div><div class="form-field"><label class="form-label">السبب</label><input class="form-input"></div>`,
+  leave:`<div class="form-grid"><div class="form-field"><label class="form-label">من تاريخ</label><input class="form-input" type="date"></div><div class="form-field"><label class="form-label">حتى تاريخ</label><input class="form-input" type="date"></div></div><div class="form-field"><label class="form-label">السبب</label><input class="form-input"></div>`,
+  deactivate:`<div class="form-field"><label class="form-label">المدة المتوقعة</label><input class="form-input" placeholder="مثال: شهر واحد"></div><div class="form-field"><label class="form-label">السبب</label><textarea class="form-input"></textarea></div>`,
+};
+function updateReqForm(){
+  const type = document.getElementById('req-type')?.value;
+  if(!type){ document.getElementById('req-form-fields').innerHTML=''; return; }
+  // Use dynamic form defs if available
+  const def = reqFormDefs[type];
+  if(def && def.fields.length) {
+    document.getElementById('req-form-fields').innerHTML = def.fields.map(f=>{
+      let input = '';
+      if(f.type==='text'||f.type==='number'||f.type==='date')
+        input=`<input class="form-input" id="rff-${f.id}" type="${f.type}" placeholder="${f.placeholder||''}">`;
+      else if(f.type==='textarea')
+        input=`<textarea class="form-input" id="rff-${f.id}" placeholder="${f.placeholder||''}" style="height:80px"></textarea>`;
+      else if(f.type==='select')
+        input=`<select class="form-input" id="rff-${f.id}"><option value="">اختر...</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+      else if(f.type==='yesno')
+        input=`<div style="display:flex;gap:0.5rem"><button type="button" class="btn btn-ghost btn-sm" onclick="setYesNo('rff-${f.id}','yes',this)">نعم</button><button type="button" class="btn btn-ghost btn-sm" onclick="setYesNo('rff-${f.id}','no',this)">لا</button><input type="hidden" id="rff-${f.id}"></div>`;
+      return `<div class="form-field"><label class="form-label">${f.label}${f.required?'<span style="color:var(--red)">*</span>':''}</label>${input}</div>`;
+    }).join('');
+  } else {
+    document.getElementById('req-form-fields').innerHTML = REQ_FORMS[type]||'';
+  }
+}
+
+function setYesNo(id, val, btn) {
+  document.getElementById(id).value = val;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='btn btn-ghost btn-sm');
+  btn.className = 'btn btn-orange btn-sm';
+}
+function submitTeacherReq() {
+  const type = document.getElementById('req-type').value;
+  if(!type){toast('اختر نوع الطلب'); return;}
+
+  const t = teachers.find(x=>String(x.id)===String(currentTeacherId));
+  const def = reqFormDefs[type];
+
+  // Collect form field values
+  let detail = '';
+  let answers = {};
+  let valid = true;
+
+  if(def && def.fields.length) {
+    def.fields.forEach(f => {
+      const el = document.getElementById('rff-'+f.id);
+      const val = el ? el.value.trim() : '';
+      if(f.required && !val) {
+        toast('⚠️ الحقل مطلوب: ' + f.label);
+        valid = false;
+        return;
+      }
+      if(val) {
+        answers[f.label] = val;
+        detail += f.label + ': ' + val + '\n';
+      }
+    });
+  }
+  if(!valid) return;
+
+  const id = 'rq' + Date.now();
+  const date = new Date().toISOString();
+  const req = {
+    id, type,
+    teacher: t?.name || 'معلم',
+    teacherId: currentTeacherId,
+    detail: detail.trim() || 'طلب ' + (REQ_TYPES[type]?.l||type),
+    answers: JSON.stringify(answers),
+    date,
+    status: 'pending'
+  };
+
+  // Add to local memory
+  requests.push(req);
+  myReqs.push({
+    id, type,
+    label: REQ_TYPES[type]?.l || type,
+    icon: REQ_TYPES[type]?.i || '📝',
+    detail: detail.trim(),
+    date,
+    status: 'pending'
+  });
+
+  // Push to Sheet
+  pushToSheet('addRequest', req);
+
+  // Reset form
+  document.getElementById('req-type').value = '';
+  document.getElementById('req-form-fields').innerHTML = '';
+  renderMyReqs();
+  toast('تم إرسال طلبك ✓ سيتم المراجعة قريباً');
+}
+function renderMyReqs() {
+  const el=document.getElementById('myReqsList');if(!el)return;
+  if(!myReqs.length){el.innerHTML='<div class="empty">لا توجد طلبات سابقة</div>';return;}
+  el.innerHTML=myReqs.map(r=>`
+    <div style="background:var(--off);border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span style="font-size:1.1rem">${r.icon||'📝'}</span>
+        <div style="flex:1">
+          <div style="font-size:0.85rem;font-weight:600">${r.label||r.type}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${fmtDt(r.date)}</div>
+        </div>
+        <span class="badge ${r.status==='done'?'badge-green':'badge-yellow'}">${r.status==='done'?'✅ تم':'⏳ قيد المراجعة'}</span>
+      </div>
+      ${r.detail?`<div style="display:none;padding:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;color:var(--muted);white-space:pre-line;line-height:1.6">${r.detail}</div>`:''}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// SUBJECT MODAL
+// ═══════════════════════════════════════════
+function initSubjectModal() {
+  document.getElementById('sm-subjects').innerHTML=ALL_SUBJECTS.map(s=>`<span class="s-tag" onclick="this.classList.toggle('sel')">${s}</span>`).join('');
+}
+
+function goToStep2() {
+  const fname = document.getElementById('td-fname').value.trim();
+  const lname = document.getElementById('td-lname').value.trim();
+  const phone = document.getElementById('td-phone').value.trim();
+  const email = document.getElementById('td-email').value.trim();
+  const shortBio = document.getElementById('td-short').value.trim();
+  if(!fname||!lname||!phone||!email||!shortBio){
+    toast('⚠️ أدخل الحقول المطلوبة (الاسم، الهاتف، الإيميل، النبذة)');
+    return;
+  }
+  document.getElementById('dataStep1').style.display='none';
+  document.getElementById('dataStep2').style.display='block';
+  document.getElementById('dataModalTitle').textContent='📋 إرسال بياناتك — الخطوة ٢ من ٢';
+}
+
+function openSubjectModal() {
+  document.getElementById('subjectModal').classList.add('open');
+}
+
+function saveSubjects() {
+  const contractLink=document.getElementById('sm-contract-link')?.value.trim()||'';
+  if(!contractLink){toast('⚠️ يرجى إضافة رابط العقد الموقع على Google Drive');return;}
+  const sel=[...document.querySelectorAll('.s-tag.sel')].map(e=>e.textContent);
+  const grades=[...document.querySelectorAll('.g-tag.sel')].map(e=>e.textContent);
+  if(!sel.length){toast('⚠️ اختر مادة واحدة على الأقل');return;}
+  if(!grades.length){toast('⚠️ اختر مرحلة دراسية واحدة على الأقل');return;}
+  const t=teachers.find(x=>String(x.id)===String(currentTeacherId));
+  if(t){
+    t.subjects=sel;
+    t.grades=grades;
+    // Save personal data from step 1
+    const fname=document.getElementById('td-fname')?.value.trim()||'';
+    const lname=document.getElementById('td-lname')?.value.trim()||'';
+    if(fname||lname) t.name='أ. '+fname+' '+lname;
+    t.phone=document.getElementById('td-phone')?.value.trim()||t.phone;
+    t.email=document.getElementById('td-email')?.value.trim()||t.email;
+    t.shortBio=document.getElementById('td-short')?.value.trim()||'';
+    t.longBio=document.getElementById('td-long')?.value.trim()||'';
+    t.photoUrl=document.getElementById('td-photo')?.value.trim()||'';
+    // Save extra fields
+    t.curriculum=[...document.querySelectorAll('.s-tag.sel')].filter(e=>['المنهج السعودي','المنهج الأمريكي','المنهج البريطاني'].includes(e.textContent)).map(e=>e.textContent).join(',');
+    // Push ALL data to sheet
+    t.contractLink=contractLink;
+    pushToSheet('update',{
+      id:t.id,
+      subjects:sel.join(','), grades:grades.join(','),
+      classification:t.classification, category:t.category,
+      shortBio:t.shortBio||'', longBio:t.longBio||'',
+      photoUrl:t.photoUrl||'', curriculum:t.curriculum||'',
+      contractLink:contractLink,
+      teacherName:t.name||'',
+      teacherPhone:t.phone||'',
+      teacherEmail:t.email||''
+    });
+  }
+  toast('تم إرسال بياناتك والعقد الموقع بنجاح ✓');
+  closeModal('subjectModal');
+}
+
+// ═══════════════════════════════════════════
+// BANNER
+// ═══════════════════════════════════════════
+function saveBanner() {
+  const title=document.getElementById('b-title').value.trim();
+  if(!title){toast('العنوان مطلوب');return;}
+  banner={title,text:document.getElementById('b-text').value.trim(),imageUrl:document.getElementById('b-img').value.trim(),link:document.getElementById('b-link').value.trim()};
+  renderBannerPage(); toast('تم تفعيل البانر ✓');
+}
+function clearBanner(){ banner=null; renderBannerPage();saveSettings(); toast('تم إيقاف البانر'); }
+function renderBannerPage() {
+  const prev=document.getElementById('bannerPreview');if(!prev)return;
+  if(banner){ prev.style.display='block'; prev.innerHTML=`<div style="font-size:0.82rem;font-weight:600;color:var(--muted);margin-bottom:0.4rem">معاينة البانر:</div>${bannerHTML()}`; }
+  else { prev.style.display='none'; }
+}
+function bannerHTML() {
+  if(!banner) return '';
+  return `<div style="background:var(--orange-light);border:1.5px solid var(--orange);border-radius:10px;padding:1rem;margin-bottom:1rem">
+    ${banner.imageUrl?`<img src="${banner.imageUrl}" style="width:100%;border-radius:8px;margin-bottom:0.75rem;max-height:160px;object-fit:cover" onerror="this.style.display='none'">`:''}
+    <div style="font-weight:700;font-size:0.95rem;margin-bottom:${banner.text?'0.4rem':'0'}">${banner.title}</div>
+    ${banner.text?`<div style="font-size:0.83rem;color:var(--text);line-height:1.6">${banner.text}</div>`:''}
+    ${banner.link?`<a href="${banner.link}" target="_blank" style="display:inline-block;margin-top:0.6rem;font-size:0.82rem;color:var(--orange);font-weight:600">اقرأ المزيد ←</a>`:''}
+  </div>`;
+}
+
+
+// ═══════════════════════════════════════════
+// UNIVERSAL EDIT MODAL (replaces all prompts)
+// ═══════════════════════════════════════════
+function showEditModal(title, fields, onSave) {
+  document.getElementById('editModalTitle').textContent = title;
+  const body = document.getElementById('editModalBody');
+  body.innerHTML = fields.map(f => `
+    <div class="form-field">
+      <label class="form-label">${f.label}${f.required?' <span style="color:var(--red)">*</span>':''}</label>
+      ${f.type==='textarea'
+        ? `<textarea class="form-input" id="em-${f.key}" style="height:100px">${f.value||''}</textarea>`
+        : `<input class="form-input" id="em-${f.key}" type="${f.type||'text'}" value="${(f.value||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder||''}" dir="${f.dir||'rtl'}">`
+      }
+    </div>
+  `).join('') + `
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+      <button class="btn btn-orange" style="flex:1" id="emSaveBtn">حفظ ✓</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('editModal')">إلغاء</button>
+    </div>`;
+  document.getElementById('emSaveBtn').onclick = () => {
+    const vals = {};
+    let valid = true;
+    fields.forEach(f => {
+      const el = document.getElementById('em-'+f.key);
+      vals[f.key] = el.value.trim();
+      if(f.required && !vals[f.key]) { el.style.borderColor='var(--red)'; valid=false; }
+      else el.style.borderColor='';
+    });
+    if(!valid){toast('أدخل الحقول المطلوبة');return;}
+    closeModal('editModal');
+    onSave(vals);
+  };
+  document.getElementById('editModal').classList.add('open');
+  // Focus first input
+  setTimeout(()=>document.getElementById('em-'+fields[0].key)?.focus(), 100);
+}
+
+
+// ═══════════════════════════════════════════
+// SETTINGS PERSISTENCE (Google Sheets)
+// ═══════════════════════════════════════════
+async function saveSettings() {
+  const settings = {
+    videoSections: JSON.stringify(videoSections),
+    messages: JSON.stringify(messages),
+    policies: JSON.stringify(policies),
+    contracts: JSON.stringify(contracts),
+    banner: JSON.stringify(banner),
+  };
+  // Save locally first
+  localStorage.setItem('gaga_settings', JSON.stringify(settings));
+  // Save to Sheet via Worker
+  if (DB_URL) {
+    try {
+      await fetch(DB_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action:'saveSettings', settings})
+      });
+    } catch(e) { console.warn('Settings save failed:', e); }
+  }
+  toast('تم حفظ الإعدادات ✓');
+}
+
+async function loadSettings() {
+  let settings = null;
+  // Try from Sheet first
+  if (DB_URL) {
+    try {
+      const res = await fetch(DB_URL + '?action=getSettings');
+      const data = await res.json();
+      if (data.settings) settings = data.settings;
+    } catch(e) {}
+  }
+  // Fallback to localStorage
+  if (!settings) {
+    const local = localStorage.getItem('gaga_settings');
+    if (local) settings = JSON.parse(local);
+  }
+  if (settings) {
+    try {
+      if (settings.videoSections) videoSections = JSON.parse(settings.videoSections);
+      if (settings.messages) messages = JSON.parse(settings.messages);
+      if (settings.policies) policies = JSON.parse(settings.policies);
+      if (settings.contracts) contracts = JSON.parse(settings.contracts);
+      if (settings.banner) banner = JSON.parse(settings.banner);
+    } catch(e) { console.warn('Settings parse error:', e); }
+  }
+}
+
+
+// ═══════════════════════════════════════════
+// DYNAMIC FORM BUILDER
+// ═══════════════════════════════════════════
+let currentReqType = null;
+
+function openReqForm(type) {
+  const form = customForms[type];
+  if(!form) return;
+  currentReqType = type;
+  document.getElementById('reqTypeSelect').style.display='none';
+  document.getElementById('reqFormArea').style.display='block';
+  document.getElementById('reqFormTitle').textContent = form.icon+' '+form.label;
+  
+  // Build form fields
+  document.getElementById('reqFormFields').innerHTML = 
+    form.fields.map(f => buildField(f)).join('') +
+    '<button class="btn btn-orange btn-full" style="margin-top:0.5rem" onclick="submitDynamicReq()">إرسال الطلب ✓</button>';
+}
+
+function buildField(f) {
+  const req = f.required ? '<span style="color:var(--red)">*</span>' : '';
+  let input = '';
+  if(f.type==='text'||f.type==='number'||f.type==='date') {
+    input = `<input class="form-input" id="rf-${f.id}" type="${f.type}" placeholder="${f.placeholder||''}" ${f.required?'required':''}>`;
+  } else if(f.type==='textarea') {
+    input = `<textarea class="form-input" id="rf-${f.id}" style="height:90px" placeholder="${f.placeholder||''}" ${f.required?'required':''}></textarea>`;
+  } else if(f.type==='select') {
+    input = `<select class="form-input" id="rf-${f.id}"><option value="">اختر...</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+  } else if(f.type==='yesno') {
+    input = `<div style="display:flex;gap:0.5rem"><button type="button" id="rf-${f.id}-yes" class="btn btn-ghost" style="flex:1" onclick="setYesNo('${f.id}','yes')">✅ نعم</button><button type="button" id="rf-${f.id}-no" class="btn btn-ghost" style="flex:1" onclick="setYesNo('${f.id}','no')">❌ لا</button></div><input type="hidden" id="rf-${f.id}" value="">`;
+  }
+  return `<div class="form-field"><label class="form-label">${f.label} ${req}</label>${input}</div>`;
+}
+
+function setYesNo(id, val) {
+  document.getElementById('rf-'+id).value = val;
+  document.getElementById('rf-'+id+'-yes').className = 'btn '+(val==='yes'?'btn-green':'btn-ghost');
+  document.getElementById('rf-'+id+'-no').className = 'btn '+(val==='no'?'btn-red':'btn-ghost');
+}
+
+function closeReqForm() {
+  currentReqType = null;
+  document.getElementById('reqTypeSelect').style.display='block';
+  document.getElementById('reqFormArea').style.display='none';
+}
+
+async function submitDynamicReq() {
+  const form = customForms[currentReqType];
+  if(!form) return;
+  
+  // Validate required fields
+  let valid = true;
+  const answers = {};
+  form.fields.forEach(f => {
+    const el = document.getElementById('rf-'+f.id);
+    if(!el) return;
+    const val = el.value.trim();
+    if(f.required && !val) { el.style.borderColor='var(--red)'; valid=false; }
+    else { if(el.style) el.style.borderColor=''; }
+    answers[f.label] = val;
+  });
+  
+  if(!valid) { toast('⚠️ أدخل الحقول المطلوبة'); return; }
+  
+  const t = teachers.find(x=>String(x.id)===String(currentTeacherId));
+  const detail = Object.entries(answers).filter(([k,v])=>v).map(([k,v])=>k+': '+v).join('\n');
+  
+  const req = {
+    id: 'rq'+Date.now(),
+    teacher: t?.name||'معلم',
+    teacherId: currentTeacherId,
+    type: currentReqType,
+    detail,
+    answers: JSON.stringify(answers),
+    date: new Date().toISOString(),
+    status: 'pending'
+  };
+  
+  // Add to local lists
+  requests.push(req);
+  myReqs.push({id:req.id, type:currentReqType, label:form.label, icon:form.icon, date:req.date, status:'pending', detail});
+  
+  // Save to Sheet
+  await pushToSheet('addRequest', req);
+  
+  closeReqForm();
+  renderMyReqs();
+  toast('تم إرسال طلبك بنجاح ✓');
+}
+
+// ═══════════════════════════════════════════
+// LOGIN SYSTEM
+// ═══════════════════════════════════════════
+const ADMIN_PASSWORDS = ['gaga2026', 'admin123']; // غيّرها لاحقاً من الكود
+let loggedInRole = null;
+let loginTab = 'teacher';
+
+// switchLoginTab defined above
+
+async function doTeacherLogin() {
+  const email = document.getElementById('li-email').value.trim().toLowerCase();
+  const pass = document.getElementById('li-pass').value.trim();
+  const btn = document.getElementById('li-btn');
+  const err = document.getElementById('li-err');
+  if(!email||!pass){err.textContent='أدخل الإيميل وكلمة السر';err.className='login-err show';return;}
+  btn.textContent='جاري التحقق...'; btn.disabled=true;
+  err.className='login-err';
+
+  // If DB connected, sync first then check
+  if(DB_URL) { try { await syncFromSheet(); } catch(e){} }
+
+  const teacher = teachers.find(t =>
+    t.email && t.email.toString().toLowerCase().trim() === email &&
+    t.password && t.password.toString().trim() === pass
+  );
+
+  btn.textContent='دخول'; btn.disabled=false;
+
+  if(teacher){
+    currentTeacherId = String(teacher.id);
+    loggedInRole = 'teacher';
+    // Save session
+    sessionStorage.setItem('gaga_session', JSON.stringify({role:'teacher', teacherId:String(teacher.id)}));
+    showMainApp('teacher');
+    // Update nav visibility based on stage
+    updateTeacherNav(parseInt(teacher.stage));
+    // If onboarded, go to library first
+    if(parseInt(teacher.stage) >= 11){
+      setTimeout(()=>goPage('tLib', null), 100);
+    }
+  } else {
+    err.textContent='إيميل أو كلمة سر غير صحيحة';
+    err.className='login-err show';
+  }
+}
+
+function doAdminLogin() {
+  const pass = document.getElementById('li-admin-pass').value.trim();
+  const err = document.getElementById('li-err');
+  if(ADMIN_PASSWORDS.includes(pass)){
+    loggedInRole = 'admin';
+    sessionStorage.setItem('gaga_session', JSON.stringify({role:'admin'}));
+    showMainApp('admin');
+  } else if(pass === 'eval2026'){
+    loggedInRole = 'eval';
+    sessionStorage.setItem('gaga_session', JSON.stringify({role:'eval'}));
+    showMainApp('eval');
+  } else {
+    err.textContent='كلمة السر غير صحيحة';
+    err.className='login-err show';
+  }
+}
+
+function showMainApp(role) {
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
+  // Show/hide DB status based on role
+  const dbBtn = document.getElementById('dbStatus');
+  if(dbBtn) dbBtn.style.display = (role==='teacher') ? 'none' : 'block';
+  // Remove role switcher for teachers
+  if(role==='teacher'){
+    const rs=document.getElementById('roleSwitcher');
+    if(rs) rs.style.display='none';
+    addLogoutBtn();
+  } else {
+    addLogoutBtn();
+  }
+  switchRole(role);
+  // Load DB
+  if(DB_URL){
+    document.getElementById('db-url').value=DB_URL;
+    testDbConnection();
+  }
+  initSubjectModal();
+  renderAnalytics();
+  renderVideos();
+  renderContracts();
+  renderMessages();
+  renderPolicies();
+}
+
+function addLogoutBtn(){
+  const topbar=document.querySelector('.topbar');
+  if(document.getElementById('logoutBtn')) return;
+  const btn=document.createElement('button');
+  btn.id='logoutBtn';
+  btn.textContent='خروج';
+  btn.style.cssText='background:var(--slate-mid);color:var(--muted-light);border:1px solid var(--slate-light);padding:0.25rem 0.65rem;border-radius:6px;font-family:inherit;font-size:0.78rem;cursor:pointer';
+  btn.onclick=doLogout;
+  topbar.appendChild(btn);
+}
+
+function doLogout(){
+  sessionStorage.removeItem('gaga_session');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('li-email').value='';
+  document.getElementById('li-pass').value='';
+  document.getElementById('li-admin-pass').value='';
+  document.getElementById('li-err').className='login-err';
+  const lb=document.getElementById('logoutBtn');
+  if(lb) lb.remove();
+}
+
+// ═══════════════════════════════════════════
+// INIT — Check saved session
+// ═══════════════════════════════════════════
+(async function init(){
+  // Load settings first
+  await loadSettings();
+  // Try restore session
+  const saved = sessionStorage.getItem('gaga_session');
+  if(saved){
+    try {
+      const sess = JSON.parse(saved);
+      if(sess.role==='teacher' && sess.teacherId){
+        // Sync from sheet first to get latest data
+        if(DB_URL) { try { await syncFromSheet(); } catch(e){} }
+        const t = teachers.find(x=>String(x.id)===String(sess.teacherId));
+        if(t){
+          currentTeacherId=sess.teacherId;
+          loggedInRole='teacher';
+          showMainApp('teacher');
+          return;
+        }
+      } else if(sess.role==='admin'||sess.role==='eval'){
+        loggedInRole=sess.role;
+        showMainApp(sess.role);
+        return;
+      }
+    } catch(e){}
+  }
+  // No valid session — show login
+  document.getElementById('loginScreen').style.display='flex';
+})();
+</script>
+</body>
+</html>
